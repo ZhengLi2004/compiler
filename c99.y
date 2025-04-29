@@ -1,0 +1,804 @@
+%code requires {
+	#include "ast.h"
+
+	typedef struct {
+		ASTNode **items;
+		int       count;
+  	} ASTList;
+
+	ASTNode *ast_root;
+}
+
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "symtab.h"
+%}
+
+/* 联合体：所有语义值类型 */
+%union {
+    int       intval;
+    char     *id;
+    ASTNode  *ast;
+    ASTList   list;   /* 仅此一种列表类型 */
+}
+
+/* Token 声明 */
+%token <id>       IDENTIFIER
+%token <intval>   CONSTANT
+%token <id>       STRING_LITERAL
+%token            SIZEOF PTR_OP INC_OP DEC_OP LEFT_OP RIGHT_OP
+%token            LE_OP GE_OP EQ_OP NE_OP AND_OP OR_OP
+%token <id>       TYPE_NAME
+%token            INT DOUBLE VOID STRUCT ENUM ELLIPSIS
+%token            IF ELSE WHILE DO FOR CONTINUE BREAK RETURN
+
+/* 非终结符语义类型声明 */
+%type  <ast>      primary_expression postfix_expression
+                  unary_expression cast_expression
+                  multiplicative_expression additive_expression
+                  shift_expression relational_expression
+                  equality_expression and_expression
+                  exclusive_or_expression inclusive_or_expression
+                  logical_and_expression logical_or_expression
+                  conditional_expression assignment_expression
+                  expression constant_expression
+                  declaration declaration_specifiers
+                  init_declarator
+                  struct_specifier struct_declaration
+                  specifier_qualifier_list struct_declarator
+                  enumeration_specifier enumerator
+                  declarator direct_declarator
+                  parameter_declaration abstract_declarator
+                  direct_abstract_declarator initializer
+                  statement compound_statement
+                  block_item expression_statement
+                  selection_statement iteration_statement
+                  jump_statement external_declaration
+                  function_definition translation_unit designator type_specifier designation
+
+%type  <list>     argument_expression_list init_declarator_list
+                  struct_declaration_list struct_declarator_list
+                  enumerator_list parameter_list parameter_type_list
+                  identifier_list initializer_list
+                  designator_list block_item_list declaration_list
+
+%start translation_unit
+
+%%
+
+/* ---------------------------- */
+/* Primary & Postfix Expressions */
+/* ---------------------------- */
+
+primary_expression
+    : IDENTIFIER
+        { $$ = ast_var($1); }
+    | CONSTANT
+        { $$ = ast_int($1); }
+    | STRING_LITERAL
+        { $$ = ast_string($1); }
+    | '(' expression ')'
+        { $$ = $2; }
+    ;
+
+postfix_expression
+    : primary_expression
+        { $$ = $1; }
+    | postfix_expression '[' expression ']'
+        { $$ = ast_binop('[', $1, $3); }
+    | postfix_expression '(' ')'
+        { $$ = ast_call(NULL, NULL, 0); }
+    | postfix_expression '(' argument_expression_list ')'
+        {
+            $$ = ast_call(NULL,
+                          $3.items,
+                          $3.count);
+        }
+    | postfix_expression '.' IDENTIFIER
+        { $$ = ast_binop('.', $1, ast_var($3)); }
+    | postfix_expression PTR_OP IDENTIFIER
+        { $$ = ast_binop('>', $1, ast_var($3)); }
+    | postfix_expression INC_OP
+        { $$ = ast_unop('+', $1); }
+    | postfix_expression DEC_OP
+        { $$ = ast_unop('-', $1); }
+    | '(' TYPE_NAME ')' '{' initializer_list '}'
+        {
+            $$ = ast_init_list($5.items, $5.count);
+        }
+    | '(' TYPE_NAME ')' '{' initializer_list ',' '}'
+        {
+            $$ = ast_init_list($5.items, $5.count);
+        }
+    ;
+
+/* ---------------------------- */
+/* Argument Expression List      */
+/* ---------------------------- */
+
+argument_expression_list
+    : assignment_expression
+        {
+            $$.items = malloc(sizeof(ASTNode*));
+            $$.items[0] = $1;
+            $$.count    = 1;
+        }
+    | argument_expression_list ',' assignment_expression
+        {
+            /* $1 是 ASTList */
+            $1.items = realloc($1.items,
+                               sizeof(ASTNode*) * ($1.count + 1));
+            $1.items[$1.count] = $3;
+            $1.count++;
+            $$ = $1;
+        }
+    ;
+
+/* ---------------------------- */
+/* Unary / Cast / Binary        */
+/* ---------------------------- */
+
+unary_expression
+    : postfix_expression
+        { $$ = $1; }
+    | INC_OP unary_expression
+        { $$ = ast_unop('+', $2); }
+    | DEC_OP unary_expression
+        { $$ = ast_unop('-', $2); }
+    | '&' cast_expression
+        { $$ = ast_unop('&', $2); }
+    | '*' cast_expression
+        { $$ = ast_pointer($2); }
+    | '+' cast_expression
+        { $$ = $2; }
+    | '-' cast_expression
+        { $$ = ast_unop('-', $2); }
+    | '~' cast_expression
+        { $$ = ast_unop('~', $2); }
+    | '!' cast_expression
+        { $$ = ast_unop('!', $2); }
+    | SIZEOF unary_expression
+        { $$ = ast_unop('$', $2); }
+    | SIZEOF '(' TYPE_NAME ')'
+        { $$ = ast_unop('$', ast_var($3)); }
+    ;
+
+cast_expression
+    : unary_expression
+        { $$ = $1; }
+    | '(' TYPE_NAME ')' cast_expression
+        { $$ = $4; }
+    ;
+
+multiplicative_expression
+    : cast_expression
+        { $$ = $1; }
+    | multiplicative_expression '*' cast_expression
+        { $$ = ast_binop('*', $1, $3); }
+    | multiplicative_expression '/' cast_expression
+        { $$ = ast_binop('/', $1, $3); }
+    | multiplicative_expression '%' cast_expression
+        { $$ = ast_binop('%', $1, $3); }
+    ;
+
+additive_expression
+    : multiplicative_expression
+        { $$ = $1; }
+    | additive_expression '+' multiplicative_expression
+        { $$ = ast_binop('+', $1, $3); }
+    | additive_expression '-' multiplicative_expression
+        { $$ = ast_binop('-', $1, $3); }
+    ;
+
+shift_expression
+    : additive_expression
+        { $$ = $1; }
+    | shift_expression LEFT_OP additive_expression
+        { $$ = ast_binop('<', $1, $3); }
+    | shift_expression RIGHT_OP additive_expression
+        { $$ = ast_binop('>', $1, $3); }
+    ;
+
+relational_expression
+    : shift_expression
+        { $$ = $1; }
+    | relational_expression '<' shift_expression
+        { $$ = ast_binop('<', $1, $3); }
+    | relational_expression '>' shift_expression
+        { $$ = ast_binop('>', $1, $3); }
+    | relational_expression LE_OP shift_expression
+        { $$ = ast_binop('l', $1, $3); }
+    | relational_expression GE_OP shift_expression
+        { $$ = ast_binop('g', $1, $3); }
+    ;
+
+equality_expression
+    : relational_expression
+        { $$ = $1; }
+    | equality_expression EQ_OP relational_expression
+        { $$ = ast_binop('=', $1, $3); }
+    | equality_expression NE_OP relational_expression
+        { $$ = ast_binop('!', $1, $3); }
+    ;
+
+and_expression
+    : equality_expression
+        { $$ = $1; }
+    | and_expression '&' equality_expression
+        { $$ = ast_binop('&', $1, $3); }
+    ;
+
+exclusive_or_expression
+    : and_expression
+        { $$ = $1; }
+    | exclusive_or_expression '^' and_expression
+        { $$ = ast_binop('^', $1, $3); }
+    ;
+
+inclusive_or_expression
+    : exclusive_or_expression
+        { $$ = $1; }
+    | inclusive_or_expression '|' exclusive_or_expression
+        { $$ = ast_binop('|', $1, $3); }
+    ;
+
+logical_and_expression
+    : inclusive_or_expression
+        { $$ = $1; }
+    | logical_and_expression AND_OP inclusive_or_expression
+        { $$ = ast_binop('&', $1, $3); }
+    ;
+
+logical_or_expression
+    : logical_and_expression
+        { $$ = $1; }
+    | logical_or_expression OR_OP logical_and_expression
+        { $$ = ast_binop('|', $1, $3); }
+    ;
+
+conditional_expression
+    : logical_or_expression
+        { $$ = $1; }
+    | logical_or_expression '?' expression ':' conditional_expression
+        {
+            ASTNode *arr[3] = { $1, $3, $5 };
+            $$ = ast_compound(arr, 3);
+        }
+    ;
+
+/* ---------------------------- */
+/* Assignment & Expression List */
+/* ---------------------------- */
+
+assignment_expression
+    : conditional_expression
+        { $$ = $1; }
+    | unary_expression '=' assignment_expression
+        { $$ = ast_assign($1, $3); }
+    ;
+
+expression
+    : assignment_expression
+        { $$ = $1; }
+    | expression ',' assignment_expression
+        {
+            ASTNode *arr[2] = { $1, $3 };
+            $$ = ast_compound(arr, 2);
+        }
+    ;
+
+constant_expression
+    : conditional_expression
+        { $$ = $1; }
+    ;
+
+/* ---------------------------- */
+/* Declarations & Types         */
+/* ---------------------------- */
+
+declaration
+    : declaration_specifiers ';'
+        {
+            $$ = ast_decl($1->ds.specs, $1->ds.scount, NULL, 0);
+            ast_free($1);
+        }
+    | declaration_specifiers init_declarator_list ';'
+        {
+            $$ = ast_decl($1->ds.specs,
+                          $1->ds.scount,
+                          $2.items,
+                          $2.count);
+            ast_free($1);
+        }
+    ;
+
+declaration_specifiers
+    : type_specifier
+        {
+            ASTNode **a = malloc(sizeof(ASTNode*));
+            a[0] = $1;
+            $$ = ast_decl_spec(a, 1);
+        }
+    | declaration_specifiers type_specifier
+        {
+            $1->ds.specs = realloc($1->ds.specs,
+                                   sizeof(ASTNode*) * ($1->ds.scount + 1));
+            $1->ds.specs[$1->ds.scount++] = $2;
+            $$ = $1;
+        }
+    ;
+
+/* Init-declarator 列表 */
+init_declarator_list
+    : init_declarator
+        {
+            $$.items = malloc(sizeof(ASTNode*));
+            $$.items[0] = $1;
+            $$.count    = 1;
+        }
+    | init_declarator_list ',' init_declarator
+        {
+            $1.items = realloc($1.items,
+                               sizeof(ASTNode*) * ($1.count + 1));
+            $1.items[$1.count++] = $3;
+            $$ = $1;
+        }
+    ;
+
+init_declarator
+    : declarator
+        { $$ = ast_init_decl($1, NULL); }
+    | declarator '=' initializer
+        { $$ = ast_init_decl($1, $3); }
+    ;
+
+/* Type-specifier */
+type_specifier
+    : VOID    { $$ = ast_type_name("void"); }
+    | INT     { $$ = ast_type_name("int"); }
+    | DOUBLE  { $$ = ast_type_name("double"); }
+    | struct_specifier { $$ = $1; }
+    | ENUM enumeration_specifier
+        { $$ = ast_enum_spec($2->ses.name, $2->ses.fields); }
+    | TYPE_NAME
+        { $$ = ast_var($1); }
+    ;
+
+/* Struct-specifier & struct_declaration_list */
+struct_specifier
+    : STRUCT IDENTIFIER '{' struct_declaration_list '}'
+        { 
+			ASTNode *flds = ast_field_list($4.items, $4.count);
+			$$ = ast_struct_spec($2, flds);
+		}
+    | STRUCT '{' struct_declaration_list '}'
+        { 
+			ASTNode *flds = ast_field_list($3.items, $3.count);
+			$$ = ast_struct_spec(NULL, flds);
+		}
+    | STRUCT IDENTIFIER
+        { $$ = ast_struct_spec($2, NULL); }
+    ;
+
+struct_declaration_list
+    : struct_declaration
+        {
+            $$.items = malloc(sizeof(ASTNode*));
+            $$.items[0] = $1;
+            $$.count    = 1;
+        }
+    | struct_declaration_list struct_declaration
+        {
+            $1.items = realloc($1.items,
+                               sizeof(ASTNode*) * ($1.count + 1));
+            $1.items[$1.count++] = $2;
+            $$ = $1;
+        }
+    ;
+
+struct_declaration
+    : specifier_qualifier_list struct_declarator_list ';'
+        {
+            ASTNode **fields = NULL;
+            int fn = 0;
+            for (int i = 0; i < $2.count; i++)
+                fields = append_node(fields, &fn, $2.items[i]);
+            $$ = ast_field_list(fields, fn);
+        }
+    ;
+
+/* specifier_qualifier_list & struct_declarator_list */
+specifier_qualifier_list
+    : type_specifier specifier_qualifier_list
+        {
+            $2->ds.specs = realloc($2->ds.specs,
+                                   sizeof(ASTNode*) * ($2->ds.scount + 1));
+            $2->ds.specs[$2->ds.scount++] = $1;
+            $$ = $2;
+        }
+    | type_specifier
+        {
+            ASTNode **a = malloc(sizeof(ASTNode*));
+            a[0] = $1;
+            $$ = ast_decl_spec(a, 1);
+        }
+    ;
+
+struct_declarator_list
+    : struct_declarator
+        {
+            $$.items = malloc(sizeof(ASTNode*));
+            $$.items[0] = $1;
+            $$.count    = 1;
+        }
+    | struct_declarator_list ',' struct_declarator
+        {
+            $1.items = realloc($1.items,
+                               sizeof(ASTNode*) * ($1.count + 1));
+            $1.items[$1.count++] = $3;
+            $$ = $1;
+        }
+    ;
+
+struct_declarator
+    : declarator
+        { $$ = ast_field(NULL, 0, $1); }
+    | ':' constant_expression
+        { $$ = ast_designation(NULL, 0); }
+    | declarator ':' constant_expression
+        { $$ = ast_field(NULL, 0, $1); }
+    ;
+
+/* Enumeration-specifier & enumerator-list */
+enumeration_specifier
+    : '{' enumerator_list '}'
+        {
+			ASTNode *flds = ast_field_list($2.items, $2.count);
+            $$ = ast_enum_spec(NULL, flds);
+        }
+    | IDENTIFIER '{' enumerator_list '}'
+        {
+            $$ = ast_enum_spec($1, $3.items);
+        }
+    | IDENTIFIER
+        {
+            $$ = ast_enum_spec($1, NULL);
+        }
+    ;
+
+enumerator_list
+    : enumerator
+        {
+            $$.items = malloc(sizeof(ASTNode*));
+            $$.items[0] = $1;
+            $$.count    = 1;
+        }
+    | enumerator_list ',' enumerator
+        {
+            $1.items = realloc($1.items,
+                               sizeof(ASTNode*) * ($1.count + 1));
+            $1.items[$1.count++] = $3;
+            $$ = $1;
+        }
+    ;
+
+enumerator
+    : IDENTIFIER
+        { $$ = ast_field(NULL, 0, ast_var($1)); }
+    | IDENTIFIER '=' constant_expression
+        { $$ = ast_field(NULL, 0, ast_var($1)); }
+    ;
+
+/* Declarators & Direct-declarators */
+declarator
+    : '*' declarator
+        { $$ = ast_pointer($2); }
+    | direct_declarator
+        { $$ = $1; }
+    ;
+
+direct_declarator
+    : IDENTIFIER
+        { $$ = ast_var($1); }
+    | '(' declarator ')'
+        { $$ = $2; }
+    | direct_declarator '[' assignment_expression ']'
+        { $$ = ast_array($1, $3); }
+    | direct_declarator '[' '*' ']'
+        { $$ = ast_array($1, NULL); }
+    | direct_declarator '[' ']'
+        { $$ = ast_array($1, NULL); }
+    | direct_declarator '(' parameter_type_list ')'
+        { 
+			ASTNode *plist = ast_param_list($3.items, $3.count);
+			$$ = ast_func_type($1, plist);
+		}
+    | direct_declarator '(' identifier_list ')'
+        { $$ = ast_func_type($1, NULL); }
+    | direct_declarator '(' ')'
+        { $$ = ast_func_type($1, NULL); }
+    ;
+
+/* Parameter-type-list & parameter-list */
+parameter_type_list
+    : parameter_list
+        { 
+			$$.items = $1.items;
+			$$.count = $1.count;
+		}
+    | parameter_list ',' ELLIPSIS
+        {
+			ASTNode *ellipsis_node = ast_var("...");
+            $$.items = realloc($1.items, sizeof(ASTNode*) * ($1.count + 1));
+            $$.items[$1.count] = ellipsis_node;
+            $$.count = $1.count + 1;
+		}
+    ;
+
+parameter_list
+    : parameter_declaration
+        {
+            $$.items = malloc(sizeof(ASTNode*));
+            $$.items[0] = $1;
+            $$.count    = 1;
+        }
+    | parameter_list ',' parameter_declaration
+        {
+            $1.items = realloc($1.items,
+                               sizeof(ASTNode*) * ($1.count + 1));
+            $1.items[$1.count++] = $3;
+            $$ = $1;
+        }
+    ;
+
+parameter_declaration
+    : declaration_specifiers declarator
+        { $$ = ast_param($1->ds.specs, $1->ds.scount, $2); }
+    | declaration_specifiers abstract_declarator
+        { $$ = ast_param($1->ds.specs, $1->ds.scount, $2); }
+    | declaration_specifiers
+        { $$ = ast_param($1->ds.specs, $1->ds.scount, NULL); }
+    ;
+
+/* Identifier-list */
+identifier_list
+    : IDENTIFIER
+        {
+            $$.items = malloc(sizeof(ASTNode*));
+            $$.items[0] = ast_var($1);
+            $$.count    = 1;
+        }
+    | identifier_list ',' IDENTIFIER
+        {
+            $1.items = realloc($1.items,
+                               sizeof(ASTNode*) * ($1.count + 1));
+            $1.items[$1.count++] = ast_var($3);
+            $$ = $1;
+        }
+    ;
+
+/* Abstract declarators */
+abstract_declarator
+    : '*'
+        { $$ = ast_pointer(NULL); }
+    | direct_abstract_declarator
+        { $$ = $1; }
+    | '*' direct_abstract_declarator
+        { $$ = ast_pointer($2); }
+    ;
+
+direct_abstract_declarator
+    : '(' abstract_declarator ')'
+        { $$ = $2; }
+    | '[' ']'
+        { $$ = ast_array(NULL, NULL); }
+    | '[' assignment_expression ']'
+        { $$ = ast_array(NULL, $2); }
+    | direct_abstract_declarator '[' ']'
+        { $$ = ast_array($1, NULL); }
+    | direct_abstract_declarator '[' assignment_expression ']'
+        { $$ = ast_array($1, $3); }
+    | '[' '*' ']'
+        { $$ = ast_array(NULL, NULL); }
+    | direct_abstract_declarator '[' '*' ']'
+        { $$ = ast_array($1, NULL); }
+    | '(' ')'
+        { $$ = ast_func_type(NULL, NULL); }
+    | '(' parameter_type_list ')'
+        { $$ = ast_func_type(NULL, ast_param_list($2.items, $2.count)); }
+    | direct_abstract_declarator '(' ')'
+        { $$ = ast_func_type(NULL, NULL); }
+    | direct_abstract_declarator '(' parameter_type_list ')'
+        { $$ = ast_func_type(NULL, ast_param_list($3.items, $3.count)); }
+    ;
+
+/* Initializers & Initializer-list */
+initializer
+    : assignment_expression
+        { $$ = $1; }
+    | '{' initializer_list '}'
+        { $$ = ast_init_list($2.items, $2.count); }
+    | '{' initializer_list ',' '}'
+        { $$ = ast_init_list($2.items, $2.count); }
+    ;
+
+initializer_list
+    : initializer
+        {
+            $$.items = malloc(sizeof(ASTNode*));
+            $$.items[0] = $1;
+            $$.count    = 1;
+        }
+    | initializer_list ',' initializer
+        {
+            $1.items = realloc($1.items,
+                               sizeof(ASTNode*) * ($1.count + 1));
+            $1.items[$1.count++] = $3;
+            $$ = $1;
+        }
+    | designation initializer
+        {
+            /* designator + init 都视为一个节点列表 */
+            $$.items = malloc(sizeof(ASTNode*) * 2);
+            $$.items[0] = $1;
+            $$.items[1] = $2;
+            $$.count    = 2;
+        }
+    ;
+
+/* Designation & Designator-list */
+designation
+    : designator_list '='
+        { $$ = ast_designation($1.items, $1.count); }
+    ;
+
+designator_list
+    : designator
+        {
+            $$.items = malloc(sizeof(ASTNode*));
+            $$.items[0] = $1;
+            $$.count    = 1;
+        }
+    | designator_list designator
+        {
+            $1.items = realloc($1.items,
+                               sizeof(ASTNode*) * ($1.count + 1));
+            $1.items[$1.count++] = $2;
+            $$ = $1;
+        }
+    ;
+
+designator
+    : '[' constant_expression ']'
+        { $$ = $2; }
+    | '.' IDENTIFIER
+        { $$ = ast_var($2); }
+    ;
+
+/* Statements */
+statement
+    : IDENTIFIER ':' statement     { $$ = ast_expr_stmt(NULL); }
+    | compound_statement           { $$ = $1; }
+    | expression_statement         { $$ = $1; }
+    | selection_statement          { $$ = $1; }
+    | iteration_statement          { $$ = $1; }
+    | jump_statement               { $$ = $1; }
+    ;
+
+compound_statement
+    : '{' '}'                      { $$ = ast_compound(NULL, 0); }
+    | '{' block_item_list '}'      { $$ = ast_compound($2.items, $2.count); }
+    ;
+
+block_item_list
+    : block_item
+        {
+            $$.items = malloc(sizeof(ASTNode*));
+            $$.items[0] = $1;
+            $$.count    = 1;
+        }
+    | block_item_list block_item
+        {
+            $1.items = realloc($1.items, sizeof(ASTNode*) * ($1.count + 1));
+            $1.items[$1.count++] = $2;
+            $$ = $1;
+        }
+    ;
+
+block_item
+    : declaration                   { $$ = $1; }
+    | statement                     { $$ = $1; }
+    ;
+
+expression_statement
+    : ';'                           { $$ = ast_expr_stmt(NULL); }
+    | expression ';'                { $$ = ast_expr_stmt($1); }
+    ;
+
+selection_statement
+    : IF '(' expression ')' statement
+        { $$ = ast_if($3, $5, NULL); }
+    | IF '(' expression ')' statement ELSE statement
+        { $$ = ast_if($3, $5, $7); }
+    ;
+
+iteration_statement
+    : WHILE '(' expression ')' statement
+        { $$ = ast_while($3, $5); }
+    | DO statement WHILE '(' expression ')' ';'
+        { $$ = ast_do_while($2, $5); }
+    | FOR '(' expression_statement expression_statement ')' statement
+        { $$ = ast_for($3, $4, NULL, $6); }
+    | FOR '(' expression_statement expression_statement expression ')' statement
+        { $$ = ast_for($3, $4, $5, $7); }
+    | FOR '(' declaration expression_statement ')' statement
+        { $$ = ast_for(ast_ext_decl($3), $4, NULL, $6); }
+    | FOR '(' declaration expression_statement expression ')' statement
+        { $$ = ast_for(ast_ext_decl($3), $4, $5, $7); }
+    ;
+
+jump_statement
+    : CONTINUE ';'                  { $$ = ast_continue(); }
+    | BREAK ';'                     { $$ = ast_break(); }
+    | RETURN ';'                    { $$ = ast_return(NULL); }
+    | RETURN expression ';'         { $$ = ast_return($2); }
+    ;
+
+/* External Declarations & Translation Unit */
+external_declaration
+    : function_definition           { $$ = ast_ext_decl($1); }
+    | declaration                   { $$ = ast_ext_decl($1); }
+    ;
+
+function_definition
+    : declaration_specifiers declarator declaration_list compound_statement
+        {
+            $$ = ast_func_type($1, $4);
+        }
+    | declaration_specifiers declarator compound_statement
+        {
+            $$ = ast_func_type($1, $3);
+        }
+    ;
+
+declaration_list
+    : declaration
+        {
+            $$.items = malloc(sizeof(ASTNode*));
+            $$.items[0] = $1;
+            $$.count    = 1;
+        }
+    | declaration_list declaration
+        {
+            $1.items = realloc($1.items,
+                               sizeof(ASTNode*) * ($1.count + 1));
+            $1.items[$1.count++] = $2;
+            $$ = $1;
+        }
+    ;
+
+translation_unit
+    : external_declaration
+        {
+            ASTNode **a = malloc(sizeof(ASTNode*));
+            a[0] = $1;
+            ast_root = ast_trans_unit(a, 1);
+        }
+    | translation_unit external_declaration
+        {
+            int old = ast_root->seq.count;
+            ast_root->seq.list = realloc(ast_root->seq.list,
+                                         sizeof(ASTNode*) * (old + 1));
+            ast_root->seq.list[old] = $2;
+            ast_root->seq.count++;
+        }
+    ;
+
+%%
+/* Error handling & main */
+extern int yylineno;
+void yyerror(const char *s) {
+    fprintf(stderr, "Error at line %d: %s\n", yylineno, s);
+}
