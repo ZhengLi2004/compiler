@@ -31,9 +31,9 @@
 %token <id>       IDENTIFIER
 %token <intval>   CONSTANT
 %token <fval>     DCONSTANT
-%token            SIZEOF PTR_OP INC_OP DEC_OP LEFT_OP RIGHT_OP
+%token            PTR_OP INC_OP DEC_OP LEFT_OP RIGHT_OP
 %token            LE_OP GE_OP EQ_OP NE_OP AND_OP OR_OP
-%token            INT DOUBLE VOID STRUCT ELLIPSIS
+%token            INT DOUBLE VOID ELLIPSIS
 %token            IF ELSE WHILE DO FOR CONTINUE BREAK RETURN
 
 /* 非终结符语义类型声明 */
@@ -48,8 +48,7 @@
                   expression constant_expression
                   declaration declaration_specifiers
                   init_declarator
-                  struct_specifier struct_declaration
-                  specifier_qualifier_list struct_declarator
+                  specifier_qualifier_list
                   declarator direct_declarator
                   parameter_declaration abstract_declarator
                   direct_abstract_declarator initializer
@@ -60,7 +59,6 @@
                   function_definition translation_unit designator type_specifier designation
 
 %type  <list>     argument_expression_list init_declarator_list
-                  struct_declaration_list struct_declarator_list
                   parameter_list parameter_type_list
                   identifier_list initializer_list
                   designator_list block_item_list
@@ -152,8 +150,6 @@ unary_expression
         { $$ = ast_unop('~', $2); }
     | '!' cast_expression
         { $$ = ast_unop('!', $2); }
-    | SIZEOF unary_expression
-        { $$ = ast_unop('$', $2); }
     ;
 
 cast_expression
@@ -343,50 +339,6 @@ type_specifier
     : VOID    { $$ = ast_type_name("void"); }
     | INT     { $$ = ast_type_name("int"); }
     | DOUBLE  { $$ = ast_type_name("double"); }
-    | struct_specifier { $$ = $1; }
-    ;
-
-/* Struct-specifier & struct_declaration_list */
-struct_specifier
-    : STRUCT IDENTIFIER '{' struct_declaration_list '}'
-        { 
-			ASTNode *flds = ast_field_list($4.items, $4.count);
-			$$ = ast_struct_spec($2, flds);
-		}
-    | STRUCT '{' struct_declaration_list '}'
-        { 
-			ASTNode *flds = ast_field_list($3.items, $3.count);
-			$$ = ast_struct_spec(NULL, flds);
-		}
-    | STRUCT IDENTIFIER
-        { $$ = ast_struct_spec($2, NULL); }
-    ;
-
-struct_declaration_list
-    : struct_declaration
-        {
-            $$.items = malloc(sizeof(ASTNode*));
-            $$.items[0] = $1;
-            $$.count    = 1;
-        }
-    | struct_declaration_list struct_declaration
-        {
-            $1.items = realloc($1.items,
-                               sizeof(ASTNode*) * ($1.count + 1));
-            $1.items[$1.count++] = $2;
-            $$ = $1;
-        }
-    ;
-
-struct_declaration
-    : specifier_qualifier_list struct_declarator_list ';'
-        {
-            ASTNode **fields = NULL;
-            int fn = 0;
-            for (int i = 0; i < $2.count; i++)
-                fields = append_node(fields, &fn, $2.items[i]);
-            $$ = ast_field_list(fields, fn);
-        }
     ;
 
 /* specifier_qualifier_list & struct_declarator_list */
@@ -404,31 +356,6 @@ specifier_qualifier_list
             a[0] = $1;
             $$ = ast_decl_spec(a, 1);
         }
-    ;
-
-struct_declarator_list
-    : struct_declarator
-        {
-            $$.items = malloc(sizeof(ASTNode*));
-            $$.items[0] = $1;
-            $$.count    = 1;
-        }
-    | struct_declarator_list ',' struct_declarator
-        {
-            $1.items = realloc($1.items,
-                               sizeof(ASTNode*) * ($1.count + 1));
-            $1.items[$1.count++] = $3;
-            $$ = $1;
-        }
-    ;
-
-struct_declarator
-    : declarator
-        { $$ = ast_field(NULL, 0, $1); }
-    | ':' constant_expression
-        { $$ = ast_designation(NULL, 0); }
-    | declarator ':' constant_expression
-        { $$ = ast_field(NULL, 0, $1); }
     ;
 
 /* Declarators & Direct-declarators */

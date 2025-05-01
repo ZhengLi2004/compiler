@@ -23,8 +23,6 @@ L	[a-zA-Z_]
 "if"        { count(); return(IF); }
 "int"       { count(); return(INT); }
 "return"    { count(); return(RETURN); }
-"sizeof"    { count(); return(SIZEOF); }
-"struct"    { count(); return(STRUCT); }
 "void"      { count(); return(VOID); }
 "while"     { count(); return(WHILE); }
 

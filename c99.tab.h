@@ -61,31 +61,29 @@ extern int yydebug;
     IDENTIFIER = 258,
     CONSTANT = 259,
     DCONSTANT = 260,
-    SIZEOF = 261,
-    PTR_OP = 262,
-    INC_OP = 263,
-    DEC_OP = 264,
-    LEFT_OP = 265,
-    RIGHT_OP = 266,
-    LE_OP = 267,
-    GE_OP = 268,
-    EQ_OP = 269,
-    NE_OP = 270,
-    AND_OP = 271,
-    OR_OP = 272,
-    INT = 273,
-    DOUBLE = 274,
-    VOID = 275,
-    STRUCT = 276,
-    ELLIPSIS = 277,
-    IF = 278,
-    ELSE = 279,
-    WHILE = 280,
-    DO = 281,
-    FOR = 282,
-    CONTINUE = 283,
-    BREAK = 284,
-    RETURN = 285
+    PTR_OP = 261,
+    INC_OP = 262,
+    DEC_OP = 263,
+    LEFT_OP = 264,
+    RIGHT_OP = 265,
+    LE_OP = 266,
+    GE_OP = 267,
+    EQ_OP = 268,
+    NE_OP = 269,
+    AND_OP = 270,
+    OR_OP = 271,
+    INT = 272,
+    DOUBLE = 273,
+    VOID = 274,
+    ELLIPSIS = 275,
+    IF = 276,
+    ELSE = 277,
+    WHILE = 278,
+    DO = 279,
+    FOR = 280,
+    CONTINUE = 281,
+    BREAK = 282,
+    RETURN = 283
   };
 #endif
 
@@ -102,7 +100,7 @@ union YYSTYPE
     ASTNode  *ast;
     ASTList   list;   /* 仅此一种列表类型 */
 
-#line 106 "c99.tab.h" /* yacc.c:1909  */
+#line 104 "c99.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;
