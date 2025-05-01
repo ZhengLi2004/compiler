@@ -5,8 +5,7 @@
 typedef enum {
     /* 基本表达式 */
     AST_INT,
-    AST_FLOAT,         /* 如需支持浮点，可扩展 */
-    AST_STRING,
+    AST_DOUBLE,         /* 如需支持浮点，可扩展 */
     AST_VAR,
     AST_BINOP,
     AST_UNOP,
@@ -55,6 +54,9 @@ struct ASTNode {
     union {
         /* AST_INT */
         int intval;
+        
+        /* AST_DOUBLE */
+        double fval;
 
         /* AST_STRING */
         char *str;
@@ -103,7 +105,7 @@ struct ASTNode {
         struct { ASTNode *base; ASTNode *size; } at;
 
         /* AST_FUNC_TYPE */
-        struct { ASTNode *ret_type; ASTNode *params; } ft;
+        struct { char *name; ASTNode *ret_type; ASTNode *params; ASTNode *body; } ft;
 
         /* AST_PARAM_LIST */
         struct { ASTNode **params; int pcount; } pl;
@@ -131,6 +133,7 @@ static ASTNode **append_node(ASTNode **arr, int *cnt, ASTNode *n) {
 }
 /* 构造函数 */
 ASTNode *ast_int(int v);
+ASTNode *ast_double(double d);
 ASTNode *ast_string(const char *s);
 ASTNode *ast_var(const char *name);
 ASTNode *ast_binop(char op, ASTNode *l, ASTNode *r);
@@ -156,7 +159,7 @@ ASTNode *ast_init_decl(ASTNode *declr, ASTNode *init);
 
 ASTNode *ast_pointer(ASTNode *to);
 ASTNode *ast_array(ASTNode *b, ASTNode *sz);
-ASTNode *ast_func_type(ASTNode *ret, ASTNode *params);
+ASTNode *ast_func_type(const char *name, ASTNode *params, ASTNode *body, ASTNode *ret);
 ASTNode *ast_param_list(ASTNode **ps, int n);
 ASTNode *ast_param(ASTNode **specs, int sn, ASTNode *declr);
 

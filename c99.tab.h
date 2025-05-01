@@ -40,7 +40,7 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 1 "c99.y" /* yacc.c:1909  */
+#line 3 "c99.y" /* yacc.c:1909  */
 
 	#include "ast.h"
 
@@ -60,7 +60,7 @@ extern int yydebug;
   {
     IDENTIFIER = 258,
     CONSTANT = 259,
-    STRING_LITERAL = 260,
+    DCONSTANT = 260,
     SIZEOF = 261,
     PTR_OP = 262,
     INC_OP = 263,
@@ -73,21 +73,19 @@ extern int yydebug;
     NE_OP = 270,
     AND_OP = 271,
     OR_OP = 272,
-    TYPE_NAME = 273,
-    INT = 274,
-    DOUBLE = 275,
-    VOID = 276,
-    STRUCT = 277,
-    ENUM = 278,
-    ELLIPSIS = 279,
-    IF = 280,
-    ELSE = 281,
-    WHILE = 282,
-    DO = 283,
-    FOR = 284,
-    CONTINUE = 285,
-    BREAK = 286,
-    RETURN = 287
+    INT = 273,
+    DOUBLE = 274,
+    VOID = 275,
+    STRUCT = 276,
+    ELLIPSIS = 277,
+    IF = 278,
+    ELSE = 279,
+    WHILE = 280,
+    DO = 281,
+    FOR = 282,
+    CONTINUE = 283,
+    BREAK = 284,
+    RETURN = 285
   };
 #endif
 
@@ -96,14 +94,15 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 20 "c99.y" /* yacc.c:1909  */
+#line 22 "c99.y" /* yacc.c:1909  */
 
     int       intval;
+    float     fval;
     char     *id;
     ASTNode  *ast;
     ASTList   list;   /* 仅此一种列表类型 */
 
-#line 107 "c99.tab.h" /* yacc.c:1909  */
+#line 106 "c99.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

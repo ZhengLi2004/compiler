@@ -28,10 +28,9 @@ L	[a-zA-Z_]
 "void"      { count(); return(VOID); }
 "while"     { count(); return(WHILE); }
 
-[1-9]{D}*           { count(); return(CONSTANT); }
-{L}({L}|{D})*       { count(); return(IDENTIFIER); }
-'(\\.|[^\\'\n])+'   { count(); return(CONSTANT); }
-\"(\\.|[^\\"\n])*\" { count(); return(STRING_LITERAL); }
+0|[1-9]{D}*           { yylval.intval = atoi(yytext); count(); return(CONSTANT); }
+{D}*"."{D}+			{ yylval.fval = atof(yytext); count(); return(DCONSTANT); }
+{L}({L}|{D})*       { yylval.id = strdup(yytext); count(); return(IDENTIFIER); }
 
 "..."   { count(); return(ELLIPSIS); }
 ">>"    { count(); return(RIGHT_OP); }

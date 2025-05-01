@@ -15,10 +15,10 @@ ASTNode *ast_int(int v) {
     ASTNode *n = calloc(1, sizeof(*n));
     n->type = AST_INT; n->intval = v; return n;
 }
-ASTNode *ast_string(const char *s) {
+ASTNode *ast_double(double d) {
     ASTNode *n = calloc(1, sizeof(*n));
-    n->type = AST_STRING; n->str = strdup(s); return n;
-}
+    n->type = AST_DOUBLE; n->fval = d; return n;
+};
 ASTNode *ast_var(const char *name) {
     if(name == NULL) {
         printf(stderr, "Error, NULL name passed to ast_var()\n");
@@ -130,9 +130,9 @@ ASTNode *ast_array(ASTNode *b, ASTNode *sz) {
     ASTNode *n = calloc(1,sizeof(*n));
     n->type = AST_ARRAY_TYPE; n->at.base = b; n->at.size = sz; return n;
 }
-ASTNode *ast_func_type(ASTNode *r, ASTNode *p) {
+ASTNode *ast_func_type(const char *name, ASTNode *p, ASTNode *b, ASTNode *r) {
     ASTNode *n = calloc(1,sizeof(*n));
-    n->type = AST_FUNC_TYPE; n->ft.ret_type = r; n->ft.params = p; return n;
+    n->type = AST_FUNC_TYPE; n->ft.ret_type = r; n->ft.params = p;  n->ft.body = b; n->ft.name = name ? strdup(name) : NULL; return n;
 }
 ASTNode *ast_param(ASTNode **s, int sn, ASTNode *d) {
     ASTNode *n = calloc(1,sizeof(*n));
@@ -187,8 +187,8 @@ void ast_print(ASTNode *node, int indent) {
         case AST_INT:
             printf("Int(%d)\n", node->intval);
             break;
-        case AST_STRING:
-            printf("String(\"%s\")\n", node->str);
+        case AST_DOUBLE:
+            printf("Double(%f)\n", node->fval);
             break;
         case AST_VAR:
             printf("Var(%s)\n", node->varname);
@@ -282,7 +282,7 @@ void ast_print(ASTNode *node, int indent) {
             break;
         case AST_DECLARATION:
             printf("Declaration (specs=%d, inits=%d)\n",
-                   node->ds.scount, node->seq.count);
+            node->ds.scount, node->seq.count);
             for (int i = 0; i < node->seq.count; i++) {
                 ast_print(node->seq.list[i], indent + 1);
             }
@@ -305,9 +305,16 @@ void ast_print(ASTNode *node, int indent) {
             if (node->at.size) ast_print(node->at.size, indent + 1);
             break;
         case AST_FUNC_TYPE:
-            printf("FuncType\n");
+            printf("FuncType %s\n", node->ft.name ? node->ft.name : "<anon>");
             ast_print(node->ft.ret_type, indent + 1);
-            if (node->ft.params) ast_print(node->ft.params, indent + 1);
+            if (node->ft.params) {
+                ast_print(node->ft.params, indent + 1);
+            }
+            if (node->ft.body) {
+                print_indent(indent + 1);
+                printf("Body\n");
+                ast_print(node->ft.body, indent + 2);
+            }
             break;
         case AST_PARAM_LIST:
             printf("ParamList [%d]\n", node->pl.pcount);
@@ -362,9 +369,6 @@ void ast_print(ASTNode *node, int indent) {
 void ast_free(ASTNode *node) {
     if (!node) return;
     switch (node->type) {
-        case AST_STRING:
-            free(node->str);
-            break;
         case AST_VAR:
             free(node->varname);
             break;
@@ -450,6 +454,7 @@ void ast_free(ASTNode *node) {
         case AST_FUNC_TYPE:
             if (node->ft.ret_type) ast_free(node->ft.ret_type);
             if (node->ft.params) ast_free(node->ft.params);
+            if (node->ft.body) ast_free(node->ft.body);
             break;
         default:
             break;

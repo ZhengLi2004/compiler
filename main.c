@@ -18,14 +18,10 @@ int main(int argc, char *argv[]) {
         perror("Error opening file");
         return 1;
     }
-
     // 解析源文件，构建 AST
     if (yyparse() == 0) {
         ast_print(ast_root, 4);
         printf("Parsing successful!\n");
-        // 在这里获取最终的 AST 结果，例如：
-        // ASTNode *root = get_ast_root();  // 获取 AST 根节点
-        // print_ast(root, 0);  // 打印 AST
     } else {
         fprintf(stderr, "Parsing failed!\n");
         fclose(yyin);

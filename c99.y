@@ -1,3 +1,5 @@
+%define parse.error verbose
+
 %code requires {
 	#include "ast.h"
 
@@ -19,6 +21,7 @@
 /* 联合体：所有语义值类型 */
 %union {
     int       intval;
+    float     fval;
     char     *id;
     ASTNode  *ast;
     ASTList   list;   /* 仅此一种列表类型 */
@@ -27,11 +30,10 @@
 /* Token 声明 */
 %token <id>       IDENTIFIER
 %token <intval>   CONSTANT
-%token <id>       STRING_LITERAL
+%token <fval>     DCONSTANT
 %token            SIZEOF PTR_OP INC_OP DEC_OP LEFT_OP RIGHT_OP
 %token            LE_OP GE_OP EQ_OP NE_OP AND_OP OR_OP
-%token <id>       TYPE_NAME
-%token            INT DOUBLE VOID STRUCT ENUM ELLIPSIS
+%token            INT DOUBLE VOID STRUCT ELLIPSIS
 %token            IF ELSE WHILE DO FOR CONTINUE BREAK RETURN
 
 /* 非终结符语义类型声明 */
@@ -48,7 +50,6 @@
                   init_declarator
                   struct_specifier struct_declaration
                   specifier_qualifier_list struct_declarator
-                  enumeration_specifier enumerator
                   declarator direct_declarator
                   parameter_declaration abstract_declarator
                   direct_abstract_declarator initializer
@@ -60,9 +61,9 @@
 
 %type  <list>     argument_expression_list init_declarator_list
                   struct_declaration_list struct_declarator_list
-                  enumerator_list parameter_list parameter_type_list
+                  parameter_list parameter_type_list
                   identifier_list initializer_list
-                  designator_list block_item_list declaration_list
+                  designator_list block_item_list
 
 %start translation_unit
 
@@ -77,8 +78,8 @@ primary_expression
         { $$ = ast_var($1); }
     | CONSTANT
         { $$ = ast_int($1); }
-    | STRING_LITERAL
-        { $$ = ast_string($1); }
+    | DCONSTANT
+        { $$ = ast_double($1); }
     | '(' expression ')'
         { $$ = $2; }
     ;
@@ -104,14 +105,6 @@ postfix_expression
         { $$ = ast_unop('+', $1); }
     | postfix_expression DEC_OP
         { $$ = ast_unop('-', $1); }
-    | '(' TYPE_NAME ')' '{' initializer_list '}'
-        {
-            $$ = ast_init_list($5.items, $5.count);
-        }
-    | '(' TYPE_NAME ')' '{' initializer_list ',' '}'
-        {
-            $$ = ast_init_list($5.items, $5.count);
-        }
     ;
 
 /* ---------------------------- */
@@ -161,15 +154,11 @@ unary_expression
         { $$ = ast_unop('!', $2); }
     | SIZEOF unary_expression
         { $$ = ast_unop('$', $2); }
-    | SIZEOF '(' TYPE_NAME ')'
-        { $$ = ast_unop('$', ast_var($3)); }
     ;
 
 cast_expression
     : unary_expression
         { $$ = $1; }
-    | '(' TYPE_NAME ')' cast_expression
-        { $$ = $4; }
     ;
 
 multiplicative_expression
@@ -261,11 +250,6 @@ logical_or_expression
 conditional_expression
     : logical_or_expression
         { $$ = $1; }
-    | logical_or_expression '?' expression ':' conditional_expression
-        {
-            ASTNode *arr[3] = { $1, $3, $5 };
-            $$ = ast_compound(arr, 3);
-        }
     ;
 
 /* ---------------------------- */
@@ -302,7 +286,7 @@ declaration
     : declaration_specifiers ';'
         {
             $$ = ast_decl($1->ds.specs, $1->ds.scount, NULL, 0);
-            ast_free($1);
+            // ast_free($1);
         }
     | declaration_specifiers init_declarator_list ';'
         {
@@ -310,7 +294,7 @@ declaration
                           $1->ds.scount,
                           $2.items,
                           $2.count);
-            ast_free($1);
+            // ast_free($1);
         }
     ;
 
@@ -360,10 +344,6 @@ type_specifier
     | INT     { $$ = ast_type_name("int"); }
     | DOUBLE  { $$ = ast_type_name("double"); }
     | struct_specifier { $$ = $1; }
-    | ENUM enumeration_specifier
-        { $$ = ast_enum_spec($2->ses.name, $2->ses.fields); }
-    | TYPE_NAME
-        { $$ = ast_var($1); }
     ;
 
 /* Struct-specifier & struct_declaration_list */
@@ -451,46 +431,6 @@ struct_declarator
         { $$ = ast_field(NULL, 0, $1); }
     ;
 
-/* Enumeration-specifier & enumerator-list */
-enumeration_specifier
-    : '{' enumerator_list '}'
-        {
-			ASTNode *flds = ast_field_list($2.items, $2.count);
-            $$ = ast_enum_spec(NULL, flds);
-        }
-    | IDENTIFIER '{' enumerator_list '}'
-        {
-            $$ = ast_enum_spec($1, $3.items);
-        }
-    | IDENTIFIER
-        {
-            $$ = ast_enum_spec($1, NULL);
-        }
-    ;
-
-enumerator_list
-    : enumerator
-        {
-            $$.items = malloc(sizeof(ASTNode*));
-            $$.items[0] = $1;
-            $$.count    = 1;
-        }
-    | enumerator_list ',' enumerator
-        {
-            $1.items = realloc($1.items,
-                               sizeof(ASTNode*) * ($1.count + 1));
-            $1.items[$1.count++] = $3;
-            $$ = $1;
-        }
-    ;
-
-enumerator
-    : IDENTIFIER
-        { $$ = ast_field(NULL, 0, ast_var($1)); }
-    | IDENTIFIER '=' constant_expression
-        { $$ = ast_field(NULL, 0, ast_var($1)); }
-    ;
-
 /* Declarators & Direct-declarators */
 declarator
     : '*' declarator
@@ -500,9 +440,7 @@ declarator
     ;
 
 direct_declarator
-    : IDENTIFIER
-        { $$ = ast_var($1); }
-    | '(' declarator ')'
+    : '(' declarator ')'
         { $$ = $2; }
     | direct_declarator '[' assignment_expression ']'
         { $$ = ast_array($1, $3); }
@@ -511,16 +449,17 @@ direct_declarator
     | direct_declarator '[' ']'
         { $$ = ast_array($1, NULL); }
     | direct_declarator '(' parameter_type_list ')'
-        { 
-			ASTNode *plist = ast_param_list($3.items, $3.count);
-			$$ = ast_func_type($1, plist);
-		}
+        {
+            ASTNode *plist = ast_param_list($3.items, $3.count);
+            $$ = ast_func_type($1->varname, plist, NULL, NULL);
+        }
     | direct_declarator '(' identifier_list ')'
-        { $$ = ast_func_type($1, NULL); }
+        { $$ = ast_func_type($1->varname, NULL, NULL, NULL); }
     | direct_declarator '(' ')'
-        { $$ = ast_func_type($1, NULL); }
+        { $$ = ast_func_type($1->varname, NULL, NULL, NULL); }
+    | IDENTIFIER
+        { $$ = ast_var($1); }
     ;
-
 /* Parameter-type-list & parameter-list */
 parameter_type_list
     : parameter_list
@@ -605,13 +544,13 @@ direct_abstract_declarator
     | direct_abstract_declarator '[' '*' ']'
         { $$ = ast_array($1, NULL); }
     | '(' ')'
-        { $$ = ast_func_type(NULL, NULL); }
+        { $$ = ast_func_type(NULL, NULL, NULL, NULL); }
     | '(' parameter_type_list ')'
-        { $$ = ast_func_type(NULL, ast_param_list($2.items, $2.count)); }
+        { $$ = ast_func_type(NULL, ast_param_list($2.items, $2.count), NULL, NULL); }
     | direct_abstract_declarator '(' ')'
-        { $$ = ast_func_type(NULL, NULL); }
+        { $$ = ast_func_type(NULL, NULL, NULL, NULL); }
     | direct_abstract_declarator '(' parameter_type_list ')'
-        { $$ = ast_func_type(NULL, ast_param_list($3.items, $3.count)); }
+        { $$ = ast_func_type(NULL, ast_param_list($3.items, $3.count), NULL, NULL); }
     ;
 
 /* Initializers & Initializer-list */
@@ -753,17 +692,20 @@ external_declaration
     ;
 
 function_definition
-    : declaration_specifiers declarator declaration_list compound_statement
+    : declaration_specifiers declarator compound_statement
         {
-            $$ = ast_func_type($1, $4);
-        }
-    | declaration_specifiers declarator compound_statement
-        {
-            $$ = ast_func_type($1, $3);
+            if ($2->type == AST_FUNC_TYPE) {
+                $2->ft.ret_type = $1->ds.specs[0];
+                $2->ft.body = $3;
+                $$ = $2;
+            } else {
+                yyerror("Expected function declarator");
+                $$ = NULL;
+            }
         }
     ;
 
-declaration_list
+/* declaration_list
     : declaration
         {
             $$.items = malloc(sizeof(ASTNode*));
@@ -777,7 +719,7 @@ declaration_list
             $1.items[$1.count++] = $2;
             $$ = $1;
         }
-    ;
+    ; */
 
 translation_unit
     : external_declaration
@@ -799,6 +741,6 @@ translation_unit
 %%
 /* Error handling & main */
 extern int yylineno;
-void yyerror(const char *s) {
-    fprintf(stderr, "Error at line %d: %s\n", yylineno, s);
+void yyerror(const char *msg) {
+    fprintf(stderr, "Error at line %d: %s\n", yylineno, msg);
 }
