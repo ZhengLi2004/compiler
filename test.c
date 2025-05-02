@@ -1,6 +1,4 @@
-int main() {
-    int a,b;
-    a=3;
-    b=5;
-    return a+b;
+int add(int a, int b) {
+    int c = a + b;
+    return c;
 }

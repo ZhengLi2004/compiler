@@ -15,7 +15,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "symtab.h"
 %}
 
 /* 联合体：所有语义值类型 */
@@ -47,9 +46,7 @@
                   conditional_expression assignment_expression
                   expression constant_expression
                   declaration declaration_specifiers
-                  init_declarator
-                  specifier_qualifier_list
-                  declarator direct_declarator
+                  init_declarator declarator direct_declarator
                   parameter_declaration abstract_declarator
                   direct_abstract_declarator initializer
                   statement compound_statement
@@ -88,10 +85,10 @@ postfix_expression
     | postfix_expression '[' expression ']'
         { $$ = ast_binop('[', $1, $3); }
     | postfix_expression '(' ')'
-        { $$ = ast_call(NULL, NULL, 0); }
+        { $$ = ast_call($1->varname, NULL, 0); }
     | postfix_expression '(' argument_expression_list ')'
         {
-            $$ = ast_call(NULL,
+            $$ = ast_call($1->varname,
                           $3.items,
                           $3.count);
         }
@@ -339,23 +336,6 @@ type_specifier
     : VOID    { $$ = ast_type_name("void"); }
     | INT     { $$ = ast_type_name("int"); }
     | DOUBLE  { $$ = ast_type_name("double"); }
-    ;
-
-/* specifier_qualifier_list & struct_declarator_list */
-specifier_qualifier_list
-    : type_specifier specifier_qualifier_list
-        {
-            $2->ds.specs = realloc($2->ds.specs,
-                                   sizeof(ASTNode*) * ($2->ds.scount + 1));
-            $2->ds.specs[$2->ds.scount++] = $1;
-            $$ = $2;
-        }
-    | type_specifier
-        {
-            ASTNode **a = malloc(sizeof(ASTNode*));
-            a[0] = $1;
-            $$ = ast_decl_spec(a, 1);
-        }
     ;
 
 /* Declarators & Direct-declarators */

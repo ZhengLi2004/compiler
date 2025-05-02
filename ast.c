@@ -144,28 +144,6 @@ ASTNode *ast_param_list(ASTNode **ps, int n) {
     node->type = AST_PARAM_LIST; node->pl.params = ps; node->pl.pcount = n;
     return node;
 }
-
-ASTNode *ast_struct_spec(const char *name, ASTNode *fields) {
-    ASTNode *n = calloc(1,sizeof(*n));
-    n->type = AST_STRUCT_SPEC; n->ses.name = name?strdup(name):NULL; n->ses.fields = fields;
-    return n;
-}
-ASTNode *ast_enum_spec(const char *name, ASTNode *fields) {
-    ASTNode *n = calloc(1,sizeof(*n));
-    n->type = AST_ENUM_SPEC; n->ses.name = name?strdup(name):NULL; n->ses.fields = fields;
-    return n;
-}
-ASTNode *ast_field(ASTNode **s, int sn, ASTNode *d) {
-    ASTNode *n = calloc(1,sizeof(*n));
-    n->type = AST_FIELD; n->field.dspecs = s; n->field.dcount = sn; n->field.declr = d;
-    return n;
-}
-ASTNode *ast_field_list(ASTNode **fs, int n) {
-    ASTNode *node = calloc(1,sizeof(*node));
-    node->type = AST_FIELD_LIST; node->seq.list = fs; node->seq.count = n;
-    return node;
-}
-
 ASTNode *ast_init_list(ASTNode **inits, int n) {
     ASTNode *node = calloc(1,sizeof(*node));
     node->type = AST_INIT_LIST; node->seq.list = inits; node->seq.count = n;
@@ -328,30 +306,6 @@ void ast_print(ASTNode *node, int indent) {
             if (node->param.declr)
                 ast_print(node->param.declr, indent + 1);
             break;
-        case AST_STRUCT_SPEC:
-            printf("StructSpec(%s)\n",
-                   node->ses.name ? node->ses.name : "<anon>");
-            if (node->ses.fields)
-                ast_print(node->ses.fields, indent + 1);
-            break;
-        case AST_ENUM_SPEC:
-            printf("EnumSpec(%s)\n",
-                   node->ses.name ? node->ses.name : "<anon>");
-            if (node->ses.fields)
-                ast_print(node->ses.fields, indent + 1);
-            break;
-        case AST_FIELD_LIST:
-            printf("FieldList [%d]\n", node->seq.count);
-            for (int i = 0; i < node->seq.count; i++)
-                ast_print(node->seq.list[i], indent + 1);
-            break;
-        case AST_FIELD:
-            printf("Field\n");
-            for (int i = 0; i < node->field.dcount; i++)
-                ast_print(node->field.dspecs[i], indent + 1);
-            if (node->field.declr)
-                ast_print(node->field.declr, indent + 1);
-            break;
         case AST_INIT_LIST:
             printf("InitList [%d]\n", node->seq.count);
             for (int i = 0; i < node->seq.count; i++)
@@ -393,7 +347,6 @@ void ast_free(ASTNode *node) {
         case AST_TRANSLATION_UNIT:
         case AST_EXTERNAL_DECL:
         case AST_DECLARATION:
-        case AST_FIELD_LIST:
         case AST_INIT_LIST:
             for (int i = 0; i < node->seq.count; i++)
                 ast_free(node->seq.list[i]);
@@ -432,17 +385,6 @@ void ast_free(ASTNode *node) {
                 ast_free(node->param.dspecs[i]);
             free(node->param.dspecs);
             if (node->param.declr) ast_free(node->param.declr);
-            break;
-        case AST_STRUCT_SPEC:
-        case AST_ENUM_SPEC:
-            if (node->ses.name) free(node->ses.name);
-            if (node->ses.fields) ast_free(node->ses.fields);
-            break;
-        case AST_FIELD:
-            for (int i = 0; i < node->field.dcount; i++)
-                ast_free(node->field.dspecs[i]);
-            free(node->field.dspecs);
-            if (node->field.declr) ast_free(node->field.declr);
             break;
         case AST_POINTER_TYPE:
             if (node->ptr_to) ast_free(node->ptr_to);

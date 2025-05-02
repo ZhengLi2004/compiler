@@ -67,9 +67,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "symtab.h"
 
-#line 73 "c99.tab.c" /* yacc.c:339  */
+#line 72 "c99.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -110,7 +109,7 @@ extern int yydebug;
 
 	ASTNode *ast_root;
 
-#line 114 "c99.tab.c" /* yacc.c:355  */
+#line 113 "c99.tab.c" /* yacc.c:355  */
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
@@ -151,7 +150,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 22 "c99.y" /* yacc.c:355  */
+#line 21 "c99.y" /* yacc.c:355  */
 
     int       intval;
     float     fval;
@@ -159,7 +158,7 @@ union YYSTYPE
     ASTNode  *ast;
     ASTList   list;   /* 仅此一种列表类型 */
 
-#line 163 "c99.tab.c" /* yacc.c:355  */
+#line 162 "c99.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -176,7 +175,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 180 "c99.tab.c" /* yacc.c:358  */
+#line 179 "c99.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -476,21 +475,21 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,    75,    75,    77,    79,    81,    86,    88,    90,    92,
-      98,   100,   102,   104,   113,   119,   135,   137,   139,   141,
-     143,   145,   147,   149,   151,   156,   161,   163,   165,   167,
-     172,   174,   176,   181,   183,   185,   190,   192,   194,   196,
-     198,   203,   205,   207,   212,   214,   219,   221,   226,   228,
-     233,   235,   240,   242,   247,   256,   258,   263,   265,   273,
-     282,   287,   298,   304,   315,   321,   331,   333,   339,   340,
-     341,   363,   365,   370,   372,   374,   376,   378,   383,   385,
-     387,   392,   397,   407,   413,   423,   425,   427,   433,   439,
-     450,   452,   454,   459,   461,   463,   465,   467,   469,   471,
-     473,   475,   477,   479,   485,   487,   489,   494,   500,   507,
-     519,   524,   530,   540,   542,   548,   549,   550,   551,   552,
-     553,   557,   558,   562,   568,   577,   578,   582,   583,   587,
-     589,   594,   596,   598,   600,   602,   604,   609,   610,   611,
-     612,   617,   618,   622,   652,   658
+       0,    72,    72,    74,    76,    78,    83,    85,    87,    89,
+      95,    97,    99,   101,   110,   116,   132,   134,   136,   138,
+     140,   142,   144,   146,   148,   153,   158,   160,   162,   164,
+     169,   171,   173,   178,   180,   182,   187,   189,   191,   193,
+     195,   200,   202,   204,   209,   211,   216,   218,   223,   225,
+     230,   232,   237,   239,   244,   253,   255,   260,   262,   270,
+     279,   284,   295,   301,   312,   318,   328,   330,   336,   337,
+     338,   343,   345,   350,   352,   354,   356,   358,   363,   365,
+     367,   372,   377,   387,   393,   403,   405,   407,   413,   419,
+     430,   432,   434,   439,   441,   443,   445,   447,   449,   451,
+     453,   455,   457,   459,   465,   467,   469,   474,   480,   487,
+     499,   504,   510,   520,   522,   528,   529,   530,   531,   532,
+     533,   537,   538,   542,   548,   557,   558,   562,   563,   567,
+     569,   574,   576,   578,   580,   582,   584,   589,   590,   591,
+     592,   597,   598,   602,   632,   638
 };
 #endif
 
@@ -1525,93 +1524,93 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 76 "c99.y" /* yacc.c:1646  */
+#line 73 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_var((yyvsp[0].id)); }
-#line 1531 "c99.tab.c" /* yacc.c:1646  */
+#line 1530 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 78 "c99.y" /* yacc.c:1646  */
+#line 75 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_int((yyvsp[0].intval)); }
-#line 1537 "c99.tab.c" /* yacc.c:1646  */
+#line 1536 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 80 "c99.y" /* yacc.c:1646  */
+#line 77 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_double((yyvsp[0].fval)); }
-#line 1543 "c99.tab.c" /* yacc.c:1646  */
+#line 1542 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 82 "c99.y" /* yacc.c:1646  */
+#line 79 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[-1].ast); }
-#line 1549 "c99.tab.c" /* yacc.c:1646  */
+#line 1548 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 87 "c99.y" /* yacc.c:1646  */
+#line 84 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 1555 "c99.tab.c" /* yacc.c:1646  */
+#line 1554 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 89 "c99.y" /* yacc.c:1646  */
+#line 86 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_binop('[', (yyvsp[-3].ast), (yyvsp[-1].ast)); }
-#line 1561 "c99.tab.c" /* yacc.c:1646  */
+#line 1560 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 91 "c99.y" /* yacc.c:1646  */
-    { (yyval.ast) = ast_call(NULL, NULL, 0); }
-#line 1567 "c99.tab.c" /* yacc.c:1646  */
+#line 88 "c99.y" /* yacc.c:1646  */
+    { (yyval.ast) = ast_call((yyvsp[-2].ast)->varname, NULL, 0); }
+#line 1566 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 93 "c99.y" /* yacc.c:1646  */
+#line 90 "c99.y" /* yacc.c:1646  */
     {
-            (yyval.ast) = ast_call(NULL,
+            (yyval.ast) = ast_call((yyvsp[-3].ast)->varname,
                           (yyvsp[-1].list).items,
                           (yyvsp[-1].list).count);
         }
-#line 1577 "c99.tab.c" /* yacc.c:1646  */
+#line 1576 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 99 "c99.y" /* yacc.c:1646  */
+#line 96 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_binop('.', (yyvsp[-2].ast), ast_var((yyvsp[0].id))); }
-#line 1583 "c99.tab.c" /* yacc.c:1646  */
+#line 1582 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 101 "c99.y" /* yacc.c:1646  */
+#line 98 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_binop('>', (yyvsp[-2].ast), ast_var((yyvsp[0].id))); }
-#line 1589 "c99.tab.c" /* yacc.c:1646  */
+#line 1588 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 103 "c99.y" /* yacc.c:1646  */
+#line 100 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_unop('+', (yyvsp[-1].ast)); }
-#line 1595 "c99.tab.c" /* yacc.c:1646  */
+#line 1594 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 105 "c99.y" /* yacc.c:1646  */
+#line 102 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_unop('-', (yyvsp[-1].ast)); }
-#line 1601 "c99.tab.c" /* yacc.c:1646  */
+#line 1600 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 114 "c99.y" /* yacc.c:1646  */
+#line 111 "c99.y" /* yacc.c:1646  */
     {
             (yyval.list).items = malloc(sizeof(ASTNode*));
             (yyval.list).items[0] = (yyvsp[0].ast);
             (yyval.list).count    = 1;
         }
-#line 1611 "c99.tab.c" /* yacc.c:1646  */
+#line 1610 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 120 "c99.y" /* yacc.c:1646  */
+#line 117 "c99.y" /* yacc.c:1646  */
     {
             /* $1 是 ASTList */
             (yyvsp[-2].list).items = realloc((yyvsp[-2].list).items,
@@ -1620,287 +1619,287 @@ yyreduce:
             (yyvsp[-2].list).count++;
             (yyval.list) = (yyvsp[-2].list);
         }
-#line 1624 "c99.tab.c" /* yacc.c:1646  */
+#line 1623 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 136 "c99.y" /* yacc.c:1646  */
+#line 133 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 1630 "c99.tab.c" /* yacc.c:1646  */
+#line 1629 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 138 "c99.y" /* yacc.c:1646  */
+#line 135 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_unop('+', (yyvsp[0].ast)); }
-#line 1636 "c99.tab.c" /* yacc.c:1646  */
+#line 1635 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 140 "c99.y" /* yacc.c:1646  */
+#line 137 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_unop('-', (yyvsp[0].ast)); }
-#line 1642 "c99.tab.c" /* yacc.c:1646  */
+#line 1641 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 142 "c99.y" /* yacc.c:1646  */
+#line 139 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_unop('&', (yyvsp[0].ast)); }
-#line 1648 "c99.tab.c" /* yacc.c:1646  */
+#line 1647 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 144 "c99.y" /* yacc.c:1646  */
+#line 141 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_pointer((yyvsp[0].ast)); }
-#line 1654 "c99.tab.c" /* yacc.c:1646  */
+#line 1653 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 146 "c99.y" /* yacc.c:1646  */
+#line 143 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 1660 "c99.tab.c" /* yacc.c:1646  */
+#line 1659 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 148 "c99.y" /* yacc.c:1646  */
+#line 145 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_unop('-', (yyvsp[0].ast)); }
-#line 1666 "c99.tab.c" /* yacc.c:1646  */
+#line 1665 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 150 "c99.y" /* yacc.c:1646  */
+#line 147 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_unop('~', (yyvsp[0].ast)); }
-#line 1672 "c99.tab.c" /* yacc.c:1646  */
+#line 1671 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 152 "c99.y" /* yacc.c:1646  */
+#line 149 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_unop('!', (yyvsp[0].ast)); }
-#line 1678 "c99.tab.c" /* yacc.c:1646  */
+#line 1677 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 157 "c99.y" /* yacc.c:1646  */
+#line 154 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 1684 "c99.tab.c" /* yacc.c:1646  */
+#line 1683 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 162 "c99.y" /* yacc.c:1646  */
+#line 159 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 1690 "c99.tab.c" /* yacc.c:1646  */
+#line 1689 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 164 "c99.y" /* yacc.c:1646  */
+#line 161 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_binop('*', (yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 1696 "c99.tab.c" /* yacc.c:1646  */
+#line 1695 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 166 "c99.y" /* yacc.c:1646  */
+#line 163 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_binop('/', (yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 1702 "c99.tab.c" /* yacc.c:1646  */
+#line 1701 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 168 "c99.y" /* yacc.c:1646  */
+#line 165 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_binop('%', (yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 1708 "c99.tab.c" /* yacc.c:1646  */
+#line 1707 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 173 "c99.y" /* yacc.c:1646  */
+#line 170 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 1714 "c99.tab.c" /* yacc.c:1646  */
+#line 1713 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 175 "c99.y" /* yacc.c:1646  */
+#line 172 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_binop('+', (yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 1720 "c99.tab.c" /* yacc.c:1646  */
+#line 1719 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 177 "c99.y" /* yacc.c:1646  */
+#line 174 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_binop('-', (yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 1726 "c99.tab.c" /* yacc.c:1646  */
+#line 1725 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 182 "c99.y" /* yacc.c:1646  */
+#line 179 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 1732 "c99.tab.c" /* yacc.c:1646  */
+#line 1731 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 184 "c99.y" /* yacc.c:1646  */
+#line 181 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_binop('<', (yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 1738 "c99.tab.c" /* yacc.c:1646  */
+#line 1737 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 186 "c99.y" /* yacc.c:1646  */
+#line 183 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_binop('>', (yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 1744 "c99.tab.c" /* yacc.c:1646  */
+#line 1743 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 191 "c99.y" /* yacc.c:1646  */
+#line 188 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 1750 "c99.tab.c" /* yacc.c:1646  */
+#line 1749 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 193 "c99.y" /* yacc.c:1646  */
+#line 190 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_binop('<', (yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 1756 "c99.tab.c" /* yacc.c:1646  */
+#line 1755 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 195 "c99.y" /* yacc.c:1646  */
+#line 192 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_binop('>', (yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 1762 "c99.tab.c" /* yacc.c:1646  */
+#line 1761 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 197 "c99.y" /* yacc.c:1646  */
+#line 194 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_binop('l', (yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 1768 "c99.tab.c" /* yacc.c:1646  */
+#line 1767 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 199 "c99.y" /* yacc.c:1646  */
+#line 196 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_binop('g', (yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 1774 "c99.tab.c" /* yacc.c:1646  */
+#line 1773 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 204 "c99.y" /* yacc.c:1646  */
+#line 201 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 1780 "c99.tab.c" /* yacc.c:1646  */
+#line 1779 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 42:
-#line 206 "c99.y" /* yacc.c:1646  */
+#line 203 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_binop('=', (yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 1786 "c99.tab.c" /* yacc.c:1646  */
+#line 1785 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 208 "c99.y" /* yacc.c:1646  */
+#line 205 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_binop('!', (yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 1792 "c99.tab.c" /* yacc.c:1646  */
+#line 1791 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 44:
-#line 213 "c99.y" /* yacc.c:1646  */
+#line 210 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 1798 "c99.tab.c" /* yacc.c:1646  */
+#line 1797 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 45:
-#line 215 "c99.y" /* yacc.c:1646  */
+#line 212 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_binop('&', (yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 1804 "c99.tab.c" /* yacc.c:1646  */
+#line 1803 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 46:
-#line 220 "c99.y" /* yacc.c:1646  */
+#line 217 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 1810 "c99.tab.c" /* yacc.c:1646  */
+#line 1809 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 47:
-#line 222 "c99.y" /* yacc.c:1646  */
+#line 219 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_binop('^', (yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 1816 "c99.tab.c" /* yacc.c:1646  */
+#line 1815 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 48:
-#line 227 "c99.y" /* yacc.c:1646  */
+#line 224 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 1822 "c99.tab.c" /* yacc.c:1646  */
+#line 1821 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 49:
-#line 229 "c99.y" /* yacc.c:1646  */
+#line 226 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_binop('|', (yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 1828 "c99.tab.c" /* yacc.c:1646  */
+#line 1827 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 50:
-#line 234 "c99.y" /* yacc.c:1646  */
+#line 231 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 1834 "c99.tab.c" /* yacc.c:1646  */
+#line 1833 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 51:
-#line 236 "c99.y" /* yacc.c:1646  */
+#line 233 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_binop('&', (yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 1840 "c99.tab.c" /* yacc.c:1646  */
+#line 1839 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 52:
-#line 241 "c99.y" /* yacc.c:1646  */
+#line 238 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 1846 "c99.tab.c" /* yacc.c:1646  */
+#line 1845 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 53:
-#line 243 "c99.y" /* yacc.c:1646  */
+#line 240 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_binop('|', (yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 1852 "c99.tab.c" /* yacc.c:1646  */
+#line 1851 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 54:
-#line 248 "c99.y" /* yacc.c:1646  */
+#line 245 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 1858 "c99.tab.c" /* yacc.c:1646  */
+#line 1857 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 55:
-#line 257 "c99.y" /* yacc.c:1646  */
+#line 254 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 1864 "c99.tab.c" /* yacc.c:1646  */
+#line 1863 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 56:
-#line 259 "c99.y" /* yacc.c:1646  */
+#line 256 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_assign((yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 1870 "c99.tab.c" /* yacc.c:1646  */
+#line 1869 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 57:
-#line 264 "c99.y" /* yacc.c:1646  */
+#line 261 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 1876 "c99.tab.c" /* yacc.c:1646  */
+#line 1875 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 58:
-#line 266 "c99.y" /* yacc.c:1646  */
+#line 263 "c99.y" /* yacc.c:1646  */
     {
             ASTNode *arr[2] = { (yyvsp[-2].ast), (yyvsp[0].ast) };
             (yyval.ast) = ast_compound(arr, 2);
         }
-#line 1885 "c99.tab.c" /* yacc.c:1646  */
+#line 1884 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 59:
-#line 274 "c99.y" /* yacc.c:1646  */
+#line 271 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 1891 "c99.tab.c" /* yacc.c:1646  */
+#line 1890 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 60:
-#line 283 "c99.y" /* yacc.c:1646  */
+#line 280 "c99.y" /* yacc.c:1646  */
     {
             (yyval.ast) = ast_decl((yyvsp[-1].ast)->ds.specs, (yyvsp[-1].ast)->ds.scount, NULL, 0);
             // ast_free($1);
         }
-#line 1900 "c99.tab.c" /* yacc.c:1646  */
+#line 1899 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 61:
-#line 288 "c99.y" /* yacc.c:1646  */
+#line 285 "c99.y" /* yacc.c:1646  */
     {
             (yyval.ast) = ast_decl((yyvsp[-2].ast)->ds.specs,
                           (yyvsp[-2].ast)->ds.scount,
@@ -1908,349 +1907,349 @@ yyreduce:
                           (yyvsp[-1].list).count);
             // ast_free($1);
         }
-#line 1912 "c99.tab.c" /* yacc.c:1646  */
+#line 1911 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 62:
-#line 299 "c99.y" /* yacc.c:1646  */
+#line 296 "c99.y" /* yacc.c:1646  */
     {
             ASTNode **a = malloc(sizeof(ASTNode*));
             a[0] = (yyvsp[0].ast);
             (yyval.ast) = ast_decl_spec(a, 1);
         }
-#line 1922 "c99.tab.c" /* yacc.c:1646  */
+#line 1921 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 63:
-#line 305 "c99.y" /* yacc.c:1646  */
+#line 302 "c99.y" /* yacc.c:1646  */
     {
             (yyvsp[-1].ast)->ds.specs = realloc((yyvsp[-1].ast)->ds.specs,
                                    sizeof(ASTNode*) * ((yyvsp[-1].ast)->ds.scount + 1));
             (yyvsp[-1].ast)->ds.specs[(yyvsp[-1].ast)->ds.scount++] = (yyvsp[0].ast);
             (yyval.ast) = (yyvsp[-1].ast);
         }
-#line 1933 "c99.tab.c" /* yacc.c:1646  */
+#line 1932 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 64:
-#line 316 "c99.y" /* yacc.c:1646  */
+#line 313 "c99.y" /* yacc.c:1646  */
     {
             (yyval.list).items = malloc(sizeof(ASTNode*));
             (yyval.list).items[0] = (yyvsp[0].ast);
             (yyval.list).count    = 1;
         }
-#line 1943 "c99.tab.c" /* yacc.c:1646  */
+#line 1942 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 65:
-#line 322 "c99.y" /* yacc.c:1646  */
+#line 319 "c99.y" /* yacc.c:1646  */
     {
             (yyvsp[-2].list).items = realloc((yyvsp[-2].list).items,
                                sizeof(ASTNode*) * ((yyvsp[-2].list).count + 1));
             (yyvsp[-2].list).items[(yyvsp[-2].list).count++] = (yyvsp[0].ast);
             (yyval.list) = (yyvsp[-2].list);
         }
-#line 1954 "c99.tab.c" /* yacc.c:1646  */
+#line 1953 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 66:
-#line 332 "c99.y" /* yacc.c:1646  */
+#line 329 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_init_decl((yyvsp[0].ast), NULL); }
-#line 1960 "c99.tab.c" /* yacc.c:1646  */
+#line 1959 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 67:
-#line 334 "c99.y" /* yacc.c:1646  */
+#line 331 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_init_decl((yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 1966 "c99.tab.c" /* yacc.c:1646  */
+#line 1965 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 68:
-#line 339 "c99.y" /* yacc.c:1646  */
+#line 336 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_type_name("void"); }
-#line 1972 "c99.tab.c" /* yacc.c:1646  */
+#line 1971 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 69:
-#line 340 "c99.y" /* yacc.c:1646  */
+#line 337 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_type_name("int"); }
-#line 1978 "c99.tab.c" /* yacc.c:1646  */
+#line 1977 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 70:
-#line 341 "c99.y" /* yacc.c:1646  */
+#line 338 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_type_name("double"); }
-#line 1984 "c99.tab.c" /* yacc.c:1646  */
+#line 1983 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 71:
-#line 364 "c99.y" /* yacc.c:1646  */
+#line 344 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_pointer((yyvsp[0].ast)); }
-#line 1990 "c99.tab.c" /* yacc.c:1646  */
+#line 1989 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 72:
-#line 366 "c99.y" /* yacc.c:1646  */
+#line 346 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 1996 "c99.tab.c" /* yacc.c:1646  */
+#line 1995 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 73:
-#line 371 "c99.y" /* yacc.c:1646  */
+#line 351 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[-1].ast); }
-#line 2002 "c99.tab.c" /* yacc.c:1646  */
+#line 2001 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 74:
-#line 373 "c99.y" /* yacc.c:1646  */
+#line 353 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_array((yyvsp[-3].ast), (yyvsp[-1].ast)); }
-#line 2008 "c99.tab.c" /* yacc.c:1646  */
+#line 2007 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 75:
-#line 375 "c99.y" /* yacc.c:1646  */
+#line 355 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_array((yyvsp[-3].ast), NULL); }
-#line 2014 "c99.tab.c" /* yacc.c:1646  */
+#line 2013 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 76:
-#line 377 "c99.y" /* yacc.c:1646  */
+#line 357 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_array((yyvsp[-2].ast), NULL); }
-#line 2020 "c99.tab.c" /* yacc.c:1646  */
+#line 2019 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 77:
-#line 379 "c99.y" /* yacc.c:1646  */
+#line 359 "c99.y" /* yacc.c:1646  */
     {
             ASTNode *plist = ast_param_list((yyvsp[-1].list).items, (yyvsp[-1].list).count);
             (yyval.ast) = ast_func_type((yyvsp[-3].ast)->varname, plist, NULL, NULL);
         }
-#line 2029 "c99.tab.c" /* yacc.c:1646  */
+#line 2028 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 78:
-#line 384 "c99.y" /* yacc.c:1646  */
+#line 364 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_func_type((yyvsp[-3].ast)->varname, NULL, NULL, NULL); }
-#line 2035 "c99.tab.c" /* yacc.c:1646  */
+#line 2034 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 79:
-#line 386 "c99.y" /* yacc.c:1646  */
+#line 366 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_func_type((yyvsp[-2].ast)->varname, NULL, NULL, NULL); }
-#line 2041 "c99.tab.c" /* yacc.c:1646  */
+#line 2040 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 80:
-#line 388 "c99.y" /* yacc.c:1646  */
+#line 368 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_var((yyvsp[0].id)); }
-#line 2047 "c99.tab.c" /* yacc.c:1646  */
+#line 2046 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 81:
-#line 393 "c99.y" /* yacc.c:1646  */
+#line 373 "c99.y" /* yacc.c:1646  */
     { 
 			(yyval.list).items = (yyvsp[0].list).items;
 			(yyval.list).count = (yyvsp[0].list).count;
 		}
-#line 2056 "c99.tab.c" /* yacc.c:1646  */
+#line 2055 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 82:
-#line 398 "c99.y" /* yacc.c:1646  */
+#line 378 "c99.y" /* yacc.c:1646  */
     {
 			ASTNode *ellipsis_node = ast_var("...");
             (yyval.list).items = realloc((yyvsp[-2].list).items, sizeof(ASTNode*) * ((yyvsp[-2].list).count + 1));
             (yyval.list).items[(yyvsp[-2].list).count] = ellipsis_node;
             (yyval.list).count = (yyvsp[-2].list).count + 1;
 		}
-#line 2067 "c99.tab.c" /* yacc.c:1646  */
+#line 2066 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 83:
-#line 408 "c99.y" /* yacc.c:1646  */
+#line 388 "c99.y" /* yacc.c:1646  */
     {
             (yyval.list).items = malloc(sizeof(ASTNode*));
             (yyval.list).items[0] = (yyvsp[0].ast);
             (yyval.list).count    = 1;
         }
-#line 2077 "c99.tab.c" /* yacc.c:1646  */
+#line 2076 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 84:
-#line 414 "c99.y" /* yacc.c:1646  */
+#line 394 "c99.y" /* yacc.c:1646  */
     {
             (yyvsp[-2].list).items = realloc((yyvsp[-2].list).items,
                                sizeof(ASTNode*) * ((yyvsp[-2].list).count + 1));
             (yyvsp[-2].list).items[(yyvsp[-2].list).count++] = (yyvsp[0].ast);
             (yyval.list) = (yyvsp[-2].list);
         }
-#line 2088 "c99.tab.c" /* yacc.c:1646  */
+#line 2087 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 85:
-#line 424 "c99.y" /* yacc.c:1646  */
+#line 404 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_param((yyvsp[-1].ast)->ds.specs, (yyvsp[-1].ast)->ds.scount, (yyvsp[0].ast)); }
-#line 2094 "c99.tab.c" /* yacc.c:1646  */
+#line 2093 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 86:
-#line 426 "c99.y" /* yacc.c:1646  */
+#line 406 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_param((yyvsp[-1].ast)->ds.specs, (yyvsp[-1].ast)->ds.scount, (yyvsp[0].ast)); }
-#line 2100 "c99.tab.c" /* yacc.c:1646  */
+#line 2099 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 87:
-#line 428 "c99.y" /* yacc.c:1646  */
+#line 408 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_param((yyvsp[0].ast)->ds.specs, (yyvsp[0].ast)->ds.scount, NULL); }
-#line 2106 "c99.tab.c" /* yacc.c:1646  */
+#line 2105 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 88:
-#line 434 "c99.y" /* yacc.c:1646  */
+#line 414 "c99.y" /* yacc.c:1646  */
     {
             (yyval.list).items = malloc(sizeof(ASTNode*));
             (yyval.list).items[0] = ast_var((yyvsp[0].id));
             (yyval.list).count    = 1;
         }
-#line 2116 "c99.tab.c" /* yacc.c:1646  */
+#line 2115 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 89:
-#line 440 "c99.y" /* yacc.c:1646  */
+#line 420 "c99.y" /* yacc.c:1646  */
     {
             (yyvsp[-2].list).items = realloc((yyvsp[-2].list).items,
                                sizeof(ASTNode*) * ((yyvsp[-2].list).count + 1));
             (yyvsp[-2].list).items[(yyvsp[-2].list).count++] = ast_var((yyvsp[0].id));
             (yyval.list) = (yyvsp[-2].list);
         }
-#line 2127 "c99.tab.c" /* yacc.c:1646  */
+#line 2126 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 90:
-#line 451 "c99.y" /* yacc.c:1646  */
+#line 431 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_pointer(NULL); }
-#line 2133 "c99.tab.c" /* yacc.c:1646  */
+#line 2132 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 91:
-#line 453 "c99.y" /* yacc.c:1646  */
+#line 433 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 2139 "c99.tab.c" /* yacc.c:1646  */
+#line 2138 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 92:
-#line 455 "c99.y" /* yacc.c:1646  */
+#line 435 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_pointer((yyvsp[0].ast)); }
-#line 2145 "c99.tab.c" /* yacc.c:1646  */
+#line 2144 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 93:
-#line 460 "c99.y" /* yacc.c:1646  */
+#line 440 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[-1].ast); }
-#line 2151 "c99.tab.c" /* yacc.c:1646  */
+#line 2150 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 94:
-#line 462 "c99.y" /* yacc.c:1646  */
+#line 442 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_array(NULL, NULL); }
-#line 2157 "c99.tab.c" /* yacc.c:1646  */
+#line 2156 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 95:
-#line 464 "c99.y" /* yacc.c:1646  */
+#line 444 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_array(NULL, (yyvsp[-1].ast)); }
-#line 2163 "c99.tab.c" /* yacc.c:1646  */
+#line 2162 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 96:
-#line 466 "c99.y" /* yacc.c:1646  */
+#line 446 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_array((yyvsp[-2].ast), NULL); }
-#line 2169 "c99.tab.c" /* yacc.c:1646  */
+#line 2168 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 97:
-#line 468 "c99.y" /* yacc.c:1646  */
+#line 448 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_array((yyvsp[-3].ast), (yyvsp[-1].ast)); }
-#line 2175 "c99.tab.c" /* yacc.c:1646  */
+#line 2174 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 98:
-#line 470 "c99.y" /* yacc.c:1646  */
+#line 450 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_array(NULL, NULL); }
-#line 2181 "c99.tab.c" /* yacc.c:1646  */
+#line 2180 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 99:
-#line 472 "c99.y" /* yacc.c:1646  */
+#line 452 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_array((yyvsp[-3].ast), NULL); }
-#line 2187 "c99.tab.c" /* yacc.c:1646  */
+#line 2186 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 100:
-#line 474 "c99.y" /* yacc.c:1646  */
+#line 454 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_func_type(NULL, NULL, NULL, NULL); }
-#line 2193 "c99.tab.c" /* yacc.c:1646  */
+#line 2192 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 101:
-#line 476 "c99.y" /* yacc.c:1646  */
+#line 456 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_func_type(NULL, ast_param_list((yyvsp[-1].list).items, (yyvsp[-1].list).count), NULL, NULL); }
-#line 2199 "c99.tab.c" /* yacc.c:1646  */
+#line 2198 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 102:
-#line 478 "c99.y" /* yacc.c:1646  */
+#line 458 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_func_type(NULL, NULL, NULL, NULL); }
-#line 2205 "c99.tab.c" /* yacc.c:1646  */
+#line 2204 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 103:
-#line 480 "c99.y" /* yacc.c:1646  */
+#line 460 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_func_type(NULL, ast_param_list((yyvsp[-1].list).items, (yyvsp[-1].list).count), NULL, NULL); }
-#line 2211 "c99.tab.c" /* yacc.c:1646  */
+#line 2210 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 104:
-#line 486 "c99.y" /* yacc.c:1646  */
+#line 466 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 2217 "c99.tab.c" /* yacc.c:1646  */
+#line 2216 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 105:
-#line 488 "c99.y" /* yacc.c:1646  */
+#line 468 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_init_list((yyvsp[-1].list).items, (yyvsp[-1].list).count); }
-#line 2223 "c99.tab.c" /* yacc.c:1646  */
+#line 2222 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 106:
-#line 490 "c99.y" /* yacc.c:1646  */
+#line 470 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_init_list((yyvsp[-2].list).items, (yyvsp[-2].list).count); }
-#line 2229 "c99.tab.c" /* yacc.c:1646  */
+#line 2228 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 107:
-#line 495 "c99.y" /* yacc.c:1646  */
+#line 475 "c99.y" /* yacc.c:1646  */
     {
             (yyval.list).items = malloc(sizeof(ASTNode*));
             (yyval.list).items[0] = (yyvsp[0].ast);
             (yyval.list).count    = 1;
         }
-#line 2239 "c99.tab.c" /* yacc.c:1646  */
+#line 2238 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 108:
-#line 501 "c99.y" /* yacc.c:1646  */
+#line 481 "c99.y" /* yacc.c:1646  */
     {
             (yyvsp[-2].list).items = realloc((yyvsp[-2].list).items,
                                sizeof(ASTNode*) * ((yyvsp[-2].list).count + 1));
             (yyvsp[-2].list).items[(yyvsp[-2].list).count++] = (yyvsp[0].ast);
             (yyval.list) = (yyvsp[-2].list);
         }
-#line 2250 "c99.tab.c" /* yacc.c:1646  */
+#line 2249 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 109:
-#line 508 "c99.y" /* yacc.c:1646  */
+#line 488 "c99.y" /* yacc.c:1646  */
     {
             /* designator + init 都视为一个节点列表 */
             (yyval.list).items = malloc(sizeof(ASTNode*) * 2);
@@ -2258,226 +2257,226 @@ yyreduce:
             (yyval.list).items[1] = (yyvsp[0].ast);
             (yyval.list).count    = 2;
         }
-#line 2262 "c99.tab.c" /* yacc.c:1646  */
+#line 2261 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 110:
-#line 520 "c99.y" /* yacc.c:1646  */
+#line 500 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_designation((yyvsp[-1].list).items, (yyvsp[-1].list).count); }
-#line 2268 "c99.tab.c" /* yacc.c:1646  */
+#line 2267 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 111:
-#line 525 "c99.y" /* yacc.c:1646  */
+#line 505 "c99.y" /* yacc.c:1646  */
     {
             (yyval.list).items = malloc(sizeof(ASTNode*));
             (yyval.list).items[0] = (yyvsp[0].ast);
             (yyval.list).count    = 1;
         }
-#line 2278 "c99.tab.c" /* yacc.c:1646  */
+#line 2277 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 112:
-#line 531 "c99.y" /* yacc.c:1646  */
+#line 511 "c99.y" /* yacc.c:1646  */
     {
             (yyvsp[-1].list).items = realloc((yyvsp[-1].list).items,
                                sizeof(ASTNode*) * ((yyvsp[-1].list).count + 1));
             (yyvsp[-1].list).items[(yyvsp[-1].list).count++] = (yyvsp[0].ast);
             (yyval.list) = (yyvsp[-1].list);
         }
-#line 2289 "c99.tab.c" /* yacc.c:1646  */
+#line 2288 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 113:
-#line 541 "c99.y" /* yacc.c:1646  */
+#line 521 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[-1].ast); }
-#line 2295 "c99.tab.c" /* yacc.c:1646  */
+#line 2294 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 114:
-#line 543 "c99.y" /* yacc.c:1646  */
+#line 523 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_var((yyvsp[0].id)); }
-#line 2301 "c99.tab.c" /* yacc.c:1646  */
+#line 2300 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 115:
-#line 548 "c99.y" /* yacc.c:1646  */
+#line 528 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_expr_stmt(NULL); }
-#line 2307 "c99.tab.c" /* yacc.c:1646  */
+#line 2306 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 116:
-#line 549 "c99.y" /* yacc.c:1646  */
+#line 529 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 2313 "c99.tab.c" /* yacc.c:1646  */
+#line 2312 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 117:
-#line 550 "c99.y" /* yacc.c:1646  */
+#line 530 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 2319 "c99.tab.c" /* yacc.c:1646  */
+#line 2318 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 118:
-#line 551 "c99.y" /* yacc.c:1646  */
+#line 531 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 2325 "c99.tab.c" /* yacc.c:1646  */
+#line 2324 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 119:
-#line 552 "c99.y" /* yacc.c:1646  */
+#line 532 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 2331 "c99.tab.c" /* yacc.c:1646  */
+#line 2330 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 120:
-#line 553 "c99.y" /* yacc.c:1646  */
+#line 533 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 2337 "c99.tab.c" /* yacc.c:1646  */
+#line 2336 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 121:
-#line 557 "c99.y" /* yacc.c:1646  */
+#line 537 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_compound(NULL, 0); }
-#line 2343 "c99.tab.c" /* yacc.c:1646  */
+#line 2342 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 122:
-#line 558 "c99.y" /* yacc.c:1646  */
+#line 538 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_compound((yyvsp[-1].list).items, (yyvsp[-1].list).count); }
-#line 2349 "c99.tab.c" /* yacc.c:1646  */
+#line 2348 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 123:
-#line 563 "c99.y" /* yacc.c:1646  */
+#line 543 "c99.y" /* yacc.c:1646  */
     {
             (yyval.list).items = malloc(sizeof(ASTNode*));
             (yyval.list).items[0] = (yyvsp[0].ast);
             (yyval.list).count    = 1;
         }
-#line 2359 "c99.tab.c" /* yacc.c:1646  */
+#line 2358 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 124:
-#line 569 "c99.y" /* yacc.c:1646  */
+#line 549 "c99.y" /* yacc.c:1646  */
     {
             (yyvsp[-1].list).items = realloc((yyvsp[-1].list).items, sizeof(ASTNode*) * ((yyvsp[-1].list).count + 1));
             (yyvsp[-1].list).items[(yyvsp[-1].list).count++] = (yyvsp[0].ast);
             (yyval.list) = (yyvsp[-1].list);
         }
-#line 2369 "c99.tab.c" /* yacc.c:1646  */
+#line 2368 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 125:
-#line 577 "c99.y" /* yacc.c:1646  */
+#line 557 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 2375 "c99.tab.c" /* yacc.c:1646  */
+#line 2374 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 126:
-#line 578 "c99.y" /* yacc.c:1646  */
+#line 558 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = (yyvsp[0].ast); }
-#line 2381 "c99.tab.c" /* yacc.c:1646  */
+#line 2380 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 127:
-#line 582 "c99.y" /* yacc.c:1646  */
+#line 562 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_expr_stmt(NULL); }
-#line 2387 "c99.tab.c" /* yacc.c:1646  */
+#line 2386 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 128:
-#line 583 "c99.y" /* yacc.c:1646  */
+#line 563 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_expr_stmt((yyvsp[-1].ast)); }
-#line 2393 "c99.tab.c" /* yacc.c:1646  */
+#line 2392 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 129:
-#line 588 "c99.y" /* yacc.c:1646  */
+#line 568 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_if((yyvsp[-2].ast), (yyvsp[0].ast), NULL); }
-#line 2399 "c99.tab.c" /* yacc.c:1646  */
+#line 2398 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 130:
-#line 590 "c99.y" /* yacc.c:1646  */
+#line 570 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_if((yyvsp[-4].ast), (yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 2405 "c99.tab.c" /* yacc.c:1646  */
+#line 2404 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 131:
-#line 595 "c99.y" /* yacc.c:1646  */
+#line 575 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_while((yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 2411 "c99.tab.c" /* yacc.c:1646  */
+#line 2410 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 132:
-#line 597 "c99.y" /* yacc.c:1646  */
+#line 577 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_do_while((yyvsp[-5].ast), (yyvsp[-2].ast)); }
-#line 2417 "c99.tab.c" /* yacc.c:1646  */
+#line 2416 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 133:
-#line 599 "c99.y" /* yacc.c:1646  */
+#line 579 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_for((yyvsp[-3].ast), (yyvsp[-2].ast), NULL, (yyvsp[0].ast)); }
-#line 2423 "c99.tab.c" /* yacc.c:1646  */
+#line 2422 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 134:
-#line 601 "c99.y" /* yacc.c:1646  */
+#line 581 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_for((yyvsp[-4].ast), (yyvsp[-3].ast), (yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 2429 "c99.tab.c" /* yacc.c:1646  */
+#line 2428 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 135:
-#line 603 "c99.y" /* yacc.c:1646  */
+#line 583 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_for(ast_ext_decl((yyvsp[-3].ast)), (yyvsp[-2].ast), NULL, (yyvsp[0].ast)); }
-#line 2435 "c99.tab.c" /* yacc.c:1646  */
+#line 2434 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 136:
-#line 605 "c99.y" /* yacc.c:1646  */
+#line 585 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_for(ast_ext_decl((yyvsp[-4].ast)), (yyvsp[-3].ast), (yyvsp[-2].ast), (yyvsp[0].ast)); }
-#line 2441 "c99.tab.c" /* yacc.c:1646  */
+#line 2440 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 137:
-#line 609 "c99.y" /* yacc.c:1646  */
+#line 589 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_continue(); }
-#line 2447 "c99.tab.c" /* yacc.c:1646  */
+#line 2446 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 138:
-#line 610 "c99.y" /* yacc.c:1646  */
+#line 590 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_break(); }
-#line 2453 "c99.tab.c" /* yacc.c:1646  */
+#line 2452 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 139:
-#line 611 "c99.y" /* yacc.c:1646  */
+#line 591 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_return(NULL); }
-#line 2459 "c99.tab.c" /* yacc.c:1646  */
+#line 2458 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 140:
-#line 612 "c99.y" /* yacc.c:1646  */
+#line 592 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_return((yyvsp[-1].ast)); }
-#line 2465 "c99.tab.c" /* yacc.c:1646  */
+#line 2464 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 141:
-#line 617 "c99.y" /* yacc.c:1646  */
+#line 597 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_ext_decl((yyvsp[0].ast)); }
-#line 2471 "c99.tab.c" /* yacc.c:1646  */
+#line 2470 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 142:
-#line 618 "c99.y" /* yacc.c:1646  */
+#line 598 "c99.y" /* yacc.c:1646  */
     { (yyval.ast) = ast_ext_decl((yyvsp[0].ast)); }
-#line 2477 "c99.tab.c" /* yacc.c:1646  */
+#line 2476 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 143:
-#line 623 "c99.y" /* yacc.c:1646  */
+#line 603 "c99.y" /* yacc.c:1646  */
     {
             if ((yyvsp[-1].ast)->type == AST_FUNC_TYPE) {
                 (yyvsp[-1].ast)->ft.ret_type = (yyvsp[-2].ast)->ds.specs[0];
@@ -2488,21 +2487,21 @@ yyreduce:
                 (yyval.ast) = NULL;
             }
         }
-#line 2492 "c99.tab.c" /* yacc.c:1646  */
+#line 2491 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 144:
-#line 653 "c99.y" /* yacc.c:1646  */
+#line 633 "c99.y" /* yacc.c:1646  */
     {
             ASTNode **a = malloc(sizeof(ASTNode*));
             a[0] = (yyvsp[0].ast);
             ast_root = ast_trans_unit(a, 1);
         }
-#line 2502 "c99.tab.c" /* yacc.c:1646  */
+#line 2501 "c99.tab.c" /* yacc.c:1646  */
     break;
 
   case 145:
-#line 659 "c99.y" /* yacc.c:1646  */
+#line 639 "c99.y" /* yacc.c:1646  */
     {
             int old = ast_root->seq.count;
             ast_root->seq.list = realloc(ast_root->seq.list,
@@ -2510,11 +2509,11 @@ yyreduce:
             ast_root->seq.list[old] = (yyvsp[0].ast);
             ast_root->seq.count++;
         }
-#line 2514 "c99.tab.c" /* yacc.c:1646  */
+#line 2513 "c99.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 2518 "c99.tab.c" /* yacc.c:1646  */
+#line 2517 "c99.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2742,7 +2741,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 668 "c99.y" /* yacc.c:1906  */
+#line 648 "c99.y" /* yacc.c:1906  */
 
 /* Error handling & main */
 extern int yylineno;

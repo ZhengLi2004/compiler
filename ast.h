@@ -35,10 +35,6 @@ typedef enum {
     AST_FUNC_TYPE,
     AST_PARAM_LIST,
     AST_PARAM,
-    AST_STRUCT_SPEC,
-    AST_ENUM_SPEC,
-    AST_FIELD_LIST,
-    AST_FIELD,
     AST_INIT_LIST,
     AST_DESIGNATION,
     AST_TYPE_NAME
@@ -74,7 +70,7 @@ struct ASTNode {
         struct { char *fname; ASTNode **args; int argc; } call;
 
         /* AST_COMPOUND_STMT, AST_TRANSLATION_UNIT, AST_EXTERNAL_DECL,
-           AST_DECLARATION, AST_INIT_LIST, AST_FIELD_LIST */
+           AST_DECLARATION, AST_INIT_LIST */
         struct { ASTNode **list; int count; } seq;
 
         /* AST_EXPR_STMT, AST_RETURN */
@@ -112,12 +108,6 @@ struct ASTNode {
 
         /* AST_PARAM */
         struct { ASTNode **dspecs; int dcount; ASTNode *declr; } param;
-
-        /* AST_STRUCT_SPEC, AST_ENUM_SPEC */
-        struct { char *name; ASTNode *fields; } ses;
-
-        /* AST_FIELD */
-        struct { ASTNode **dspecs; int dcount; ASTNode *declr; } field;
 
         /* AST_DESIGNATION */
         ASTNode **des; /* array of designators */
@@ -162,11 +152,6 @@ ASTNode *ast_array(ASTNode *b, ASTNode *sz);
 ASTNode *ast_func_type(const char *name, ASTNode *params, ASTNode *body, ASTNode *ret);
 ASTNode *ast_param_list(ASTNode **ps, int n);
 ASTNode *ast_param(ASTNode **specs, int sn, ASTNode *declr);
-
-ASTNode *ast_struct_spec(const char *name, ASTNode *fields);
-ASTNode *ast_enum_spec(const char *name, ASTNode *fields);
-ASTNode *ast_field_list(ASTNode **fs, int n);
-ASTNode *ast_field(ASTNode **specs, int sn, ASTNode *declr);
 
 ASTNode *ast_init_list(ASTNode **inits, int n);
 ASTNode *ast_designation(ASTNode **ds, int n);
