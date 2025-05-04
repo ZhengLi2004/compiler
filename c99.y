@@ -200,7 +200,7 @@ equality_expression
     : relational_expression
         { $$ = $1; }
     | equality_expression EQ_OP relational_expression
-        { $$ = ast_binop('=', $1, $3); }
+        { $$ = ast_binop('e', $1, $3); }
     | equality_expression NE_OP relational_expression
         { $$ = ast_binop('!', $1, $3); }
     ;

@@ -22,6 +22,20 @@ int is_variable_redeclared(SymbolTable *table, const char *name);
 void handle_function_parameters(ASTNode *func, SymbolTable *table);
 Type* get_function_return_type(SymbolTable *table);
 int is_in_loop(SymbolTable *table);
+int node_is_arithmetic(ASTNode *node);
+int node_is_comparison(ASTNode *node);
+
+int node_is_arithmetic(ASTNode *node) {
+    return node->type == AST_BINOP && 
+           (strchr("+-*/%", node->bin.op) != NULL);
+}
+
+int node_is_comparison(ASTNode *node) {
+    return node->type == AST_BINOP && 
+           (strchr("=><!", node->bin.op) != NULL || 
+            node->bin.op == 'e' || node->bin.op == '!' ||
+            node->bin.op == 'l' || node->bin.op == 'g');
+}
 
 // 打印符号表调试信息
 void symbol_table_print_debug(SymbolTable *table, int level) {
@@ -389,6 +403,28 @@ Type* get_expression_type(ASTNode *expr, SymbolTable *table) {
         case AST_CALL: {
             Symbol *func = symbol_table_lookup(table, expr->call.fname);
             return func && func->type->kind == TYPE_FUNCTION ? func->type->function.return_type : NULL;
+        }
+        case AST_BINOP: {
+            Type *lhs = get_expression_type(expr->bin.lhs, table);
+            Type *rhs = get_expression_type(expr->bin.rhs, table);
+
+            // 算术运算型
+            if (node_is_arithmetic(expr)) {
+                if (lhs && rhs) {
+                    if (strcmp(lhs->basic, "double") == 0 || 
+                        strcmp(rhs->basic, "double") == 0) {
+                        return type_basic("double");
+                    }
+                    return type_basic("int");
+                }
+            }   
+            
+            // 比较运算返回int类型
+            if (node_is_comparison(expr)) {
+                return type_basic("int");
+            }
+
+            return NULL;
         }
         default: return NULL;
     }
