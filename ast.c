@@ -104,7 +104,7 @@ ASTNode *ast_ext_decl(ASTNode *d) {
 }
 
 ASTNode *ast_decl_spec(ASTNode **s, int n) {
-    ASTNode *node = calloc(1,sizeof(*node));
+    ASTNode *node = malloc(sizeof(*node));
     node->type = AST_DECL_SPEC;
     node->ds.specs = s; node->ds.scount = n;
     return node;
@@ -115,13 +115,14 @@ ASTNode *ast_init_decl(ASTNode *declr, ASTNode *init) {
     return node;
 }
 ASTNode *ast_decl(ASTNode **specs, int sn, ASTNode **inits, int in) {
-    ASTNode *node = calloc(1,sizeof(*node));
+    ASTNode *node = calloc(1, sizeof(*node));
     node->type = AST_DECLARATION;
-    node->ds.specs = specs; node->ds.scount = sn;
-    node->seq.list = inits; node->seq.count = in;
+    node->declaration.specs = specs;
+    node->declaration.scount = sn;
+    node->declaration.inits = inits;
+    node->declaration.icount = in;
     return node;
 }
-
 ASTNode *ast_pointer(ASTNode *to) {
     ASTNode *n = calloc(1,sizeof(*n));
     n->type = AST_POINTER_TYPE; n->ptr_to = to; return n;
@@ -260,9 +261,12 @@ void ast_print(ASTNode *node, int indent) {
             break;
         case AST_DECLARATION:
             printf("Declaration (specs=%d, inits=%d)\n",
-            node->ds.scount, node->seq.count);
-            for (int i = 0; i < node->seq.count; i++) {
-                ast_print(node->seq.list[i], indent + 1);
+                node->declaration.scount, node->declaration.icount);
+            for (int i = 0; i < node->declaration.scount; ++i) {
+                ast_print(node->declaration.specs[i], indent + 1);
+            }
+            for (int i = 0; i < node->declaration.icount; ++i) {
+                ast_print(node->declaration.inits[i], indent + 1);
             }
             break;
         case AST_TYPE_NAME:

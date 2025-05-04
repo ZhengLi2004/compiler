@@ -279,7 +279,6 @@ declaration
     : declaration_specifiers ';'
         {
             $$ = ast_decl($1->ds.specs, $1->ds.scount, NULL, 0);
-            // ast_free($1);
         }
     | declaration_specifiers init_declarator_list ';'
         {
@@ -287,7 +286,6 @@ declaration
                           $1->ds.scount,
                           $2.items,
                           $2.count);
-            // ast_free($1);
         }
     ;
 

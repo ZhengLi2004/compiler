@@ -3,18 +3,39 @@
 #include "symbol_table.h"
 
 Type* get_type_from_declaration_specifiers(ASTNode* spec_node) {
-    if (spec_node->type == AST_DECL_SPEC) {
-        for (int i = 0; i < spec_node->ds.scount; ++i) {
-            ASTNode* spec = spec_node->ds.specs[i];
-            if (spec->type == AST_TYPE_NAME) {
-                const char* name = spec->str;
-                if (strcmp(name, "int") == 0) return type_basic("int");
-                if (strcmp(name, "double") == 0) return type_basic("double");
-                if (strcmp(name, "void") == 0) return type_basic("void");
-            }
-        }
+    if (!spec_node) {
+        return type_basic("int");
     }
-    return type_basic("int");
+    switch (spec_node->type) {
+        case AST_DECL_SPEC: {
+            for (int i = 0; i < spec_node->ds.scount; ++i) {
+                ASTNode* spec = spec_node->ds.specs[i];
+                if (spec->type == AST_TYPE_NAME) {
+                    const char* name = spec->str;
+                    if (strcmp(name, "int") == 0) return type_basic("int");
+                    if (strcmp(name, "double") == 0) return type_basic("double");
+                    if (strcmp(name, "void") == 0) return type_basic("void");
+                }
+            }
+            // 默认返回 int 类型
+            return type_basic("anon");
+        }
+
+        case AST_VAR:
+            // 变量名本身不包含类型信息，但可以尝试从上下文获取，或返回默认类型
+            return type_basic("anon");
+
+        case AST_TYPE_NAME:
+            // 直接提取类型名
+            if (strcmp(spec_node->str, "int") == 0) return type_basic("int");
+            if (strcmp(spec_node->str, "double") == 0) return type_basic("double");
+            if (strcmp(spec_node->str, "void") == 0) return type_basic("void");
+            return type_basic("anon");
+
+        default:
+            // 其他情况返回默认类型 int
+            return type_basic("anon");
+    }
 }
 
 Type* parse_declarator(ASTNode* node, Type* base_type) {
@@ -115,16 +136,24 @@ void build_symbol_table(ASTNode* node, SymbolTable* symtab) {
 
         case AST_DECLARATION:
             {
-                Type* base_type = get_type_from_declaration_specifiers(node->ds.specs[0]);
-                for (int i = 0; i < node->seq.count; ++i) {
-                    ASTNode* init_decl = node->seq.list[i];
+                // 获取声明说明符的类型（如 int, double）
+                Type* base_type = get_type_from_declaration_specifiers(node->declaration.specs[0]);
+
+                // 遍历所有初始化声明符（如变量声明）
+                for (int i = 0; i < node->declaration.icount; ++i) {
+                    ASTNode* init_decl = node->declaration.inits[i];
+
                     if (init_decl->type == AST_INIT_DECL) {
                         ASTNode* declr = init_decl->id.declr;
-                        if (declr->type == AST_VAR) {
-                            Type* type = parse_declarator(declr, base_type);
+                        ASTNode* var_node = declr;
+
+                        while (var_node->type == AST_ARRAY_TYPE)
+                            var_node = var_node->at.base;
+
+                        if (var_node->type == AST_VAR) {
                             Symbol* sym = (Symbol*)malloc(sizeof(Symbol));
-                            sym->name = strdup(declr->varname);
-                            sym->type = type;
+                            sym->name = strdup(var_node->varname);
+                            sym->type = parse_declarator(declr, base_type);
                             sym->scope_depth = symtab->scope_depth;
                             sym->is_constant = 0;
                             sym->is_parameter = 0;

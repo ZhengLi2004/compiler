@@ -70,7 +70,7 @@ struct ASTNode {
         struct { char *fname; ASTNode **args; int argc; } call;
 
         /* AST_COMPOUND_STMT, AST_TRANSLATION_UNIT, AST_EXTERNAL_DECL,
-           AST_DECLARATION, AST_INIT_LIST */
+        AST_INIT_LIST */
         struct { ASTNode **list; int count; } seq;
 
         /* AST_EXPR_STMT, AST_RETURN */
@@ -111,6 +111,12 @@ struct ASTNode {
 
         /* AST_DESIGNATION */
         ASTNode **des; /* array of designators */
+
+        /* AST_DECLARATION */
+        struct {
+            ASTNode **specs; int scount;
+            ASTNode **inits; int icount;
+        } declaration;
     };
 };
 
