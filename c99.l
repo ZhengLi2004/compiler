@@ -30,7 +30,6 @@ L	[a-zA-Z_]
 {D}*"."{D}+			{ yylval.fval = atof(yytext); count(); return(DCONSTANT); }
 {L}({L}|{D})*       { yylval.id = strdup(yytext); count(); return(IDENTIFIER); }
 
-"..."   { count(); return(ELLIPSIS); }
 ">>"    { count(); return(RIGHT_OP); }
 "<<"    { count(); return(LEFT_OP); }
 "++"    { count(); return(INC_OP); }
@@ -66,7 +65,6 @@ L	[a-zA-Z_]
 ">"         { count(); return('>'); }
 "^"         { count(); return('^'); }
 "|"         { count(); return('|'); }
-"?"         { count(); return('?'); }
 
 [ \t\v\n\f]	{ count(); }
 

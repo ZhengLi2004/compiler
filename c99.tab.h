@@ -75,15 +75,14 @@ extern int yydebug;
     INT = 272,
     DOUBLE = 273,
     VOID = 274,
-    ELLIPSIS = 275,
-    IF = 276,
-    ELSE = 277,
-    WHILE = 278,
-    DO = 279,
-    FOR = 280,
-    CONTINUE = 281,
-    BREAK = 282,
-    RETURN = 283
+    IF = 275,
+    ELSE = 276,
+    WHILE = 277,
+    DO = 278,
+    FOR = 279,
+    CONTINUE = 280,
+    BREAK = 281,
+    RETURN = 282
   };
 #endif
 
@@ -100,7 +99,7 @@ union YYSTYPE
     ASTNode  *ast;
     ASTList   list;   /* 仅此一种列表类型 */
 
-#line 104 "c99.tab.h" /* yacc.c:1909  */
+#line 103 "c99.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

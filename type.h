@@ -34,7 +34,6 @@ typedef struct Type {
             struct Type *return_type;
             struct Type **param_types;
             int param_count;
-            int is_variadic; // 是否具有省略号
         } function;
     };
 } Type;
@@ -49,7 +48,7 @@ Type* type_pointer(Type* base);
 Type* type_array(Type* base, int size);
 
 // 构造函数类型
-Type* type_function(Type* return_type, Type** param_types, int param_count, int is_variadic);
+Type* type_function(Type* return_type, Type** param_types, int param_count);
 
 // 打印类型
 void type_print(Type* type, FILE* out);

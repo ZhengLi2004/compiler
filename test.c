@@ -1,5 +1,7 @@
+int add(int a, int b) {
+    return a + b;
+}
+
 int main() {
-    int b[5];
-    int a[-1];
-    b = a;
+    int *arr[10];
 }

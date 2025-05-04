@@ -32,7 +32,7 @@
 %token <fval>     DCONSTANT
 %token            PTR_OP INC_OP DEC_OP LEFT_OP RIGHT_OP
 %token            LE_OP GE_OP EQ_OP NE_OP AND_OP OR_OP
-%token            INT DOUBLE VOID ELLIPSIS
+%token            INT DOUBLE VOID
 %token            IF ELSE WHILE DO FOR CONTINUE BREAK RETURN
 
 /* 非终结符语义类型声明 */
@@ -371,13 +371,6 @@ parameter_type_list
         { 
 			$$.items = $1.items;
 			$$.count = $1.count;
-		}
-    | parameter_list ',' ELLIPSIS
-        {
-			ASTNode *ellipsis_node = ast_var("...");
-            $$.items = realloc($1.items, sizeof(ASTNode*) * ($1.count + 1));
-            $$.items[$1.count] = ellipsis_node;
-            $$.count = $1.count + 1;
 		}
     ;
 

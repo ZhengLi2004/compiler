@@ -44,7 +44,6 @@ Type* copy_type(Type *src) {
         case TYPE_FUNCTION:
             dst->function.return_type = copy_type(src->function.return_type);
             dst->function.param_count = src->function.param_count;
-            dst->function.is_variadic = src->function.is_variadic;
             dst->function.param_types = (Type**)malloc(dst->function.param_count * sizeof(Type*));
             for (int i = 0; i < dst->function.param_count; ++i) {
                 dst->function.param_types[i] = copy_type(src->function.param_types[i]);
@@ -55,7 +54,7 @@ Type* copy_type(Type *src) {
     return dst;
 }
 
-Type* type_function(Type* return_type, Type** param_types, int param_count, int is_variadic) {
+Type* type_function(Type* return_type, Type** param_types, int param_count) {
     Type* t = (Type*)malloc(sizeof(Type));
     t->kind = TYPE_FUNCTION;
     t->function.return_type = copy_type(return_type);  // 深拷贝
@@ -65,7 +64,6 @@ Type* type_function(Type* return_type, Type** param_types, int param_count, int 
         t->function.param_types[i] = copy_type(param_types[i]);  // 深拷贝
     }
     t->function.param_count = param_count;
-    t->function.is_variadic = is_variadic;
     return t;
 }
 
@@ -90,7 +88,6 @@ void type_print(Type* type, FILE* out) {
             fprintf(out, "function returning ");
             type_print(type->function.return_type, out);
             fprintf(out, " with %d parameters", type->function.param_count);
-            if (type->function.is_variadic) fprintf(out, " (variadic)");
             break;
     }
 }
