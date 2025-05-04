@@ -19,11 +19,10 @@ gcc -c -o type.o type.c $LLVM_CFLAGS
 gcc -c -o symbol_table.o symbol_table.c $LLVM_CFLAGS
 gcc -c -o build_symbol_table.o build_symbol_table.c $LLVM_CFLAGS
 gcc -c -o type_converter.o type_converter.c $LLVM_CFLAGS
-gcc -c -o type_check.o type_check.c $LLVM_CFLAGS
 gcc -c -o main.o main.c $LLVM_CFLAGS
 
 # 链接最终可执行文件
 gcc -o c99c main.o c99.tab.c lex.yy.c ast.o type.o symbol_table.o \
-    build_symbol_table.o type_converter.o type_check.o $LLVM_LDFLAGS $LLVM_LIBS -lfl
+    build_symbol_table.o type_converter.o $LLVM_LDFLAGS $LLVM_LIBS -lfl
 
 echo "✅ Build completed: c99c"

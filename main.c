@@ -3,7 +3,6 @@
 #include "ast.h"
 #include "c99.tab.h"
 #include "symbol_table.h"
-#include "type_check.h"
 
 extern FILE* yyin;
 extern int yyparse();
@@ -37,14 +36,14 @@ int main(int argc, char* argv[]) {
     printf("✅ Symbol table built:\n");
     symbol_table_print(symtab, stdout);
 
-    // 类型检查
-    if (type_check_ast(ast_root, symtab) == 0) {
-        printf("✅ Type check passed\n");
-    } else {
-        printf("❌ Type check failed\n");
-        fclose(yyin);
-        return 1;
-    }
+    // // 类型检查
+    // if (type_check_ast(ast_root, symtab) == 0) {
+    //     printf("✅ Type check passed\n");
+    // } else {
+    //     printf("❌ Type check failed\n");
+    //     fclose(yyin);
+    //     return 1;
+    // }
 
     // 清理
     symbol_table_free(symtab);

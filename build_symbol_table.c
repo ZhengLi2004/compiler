@@ -1,250 +1,249 @@
+#include "build_symbol_table.h"
 #include "ast.h"
 #include "type.h"
 #include "symbol_table.h"
+#include "type.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-Type* get_type_from_declaration_specifiers(ASTNode* spec_node) {
-    if (!spec_node) {
-        return type_basic("int");
+// 提取数组大小并验证是否合法
+static int get_array_size(ASTNode *size_node, int *out_size) {
+    if (!size_node) {
+        fprintf(stderr, "❌ Error: Missing array size\n");
+        return 0;
     }
-    switch (spec_node->type) {
-        case AST_DECL_SPEC: {
-            for (int i = 0; i < spec_node->ds.scount; ++i) {
-                ASTNode* spec = spec_node->ds.specs[i];
-                if (spec->type == AST_TYPE_NAME) {
-                    const char* name = spec->str;
-                    if (strcmp(name, "int") == 0) return type_basic("int");
-                    if (strcmp(name, "double") == 0) return type_basic("double");
-                    if (strcmp(name, "void") == 0) return type_basic("void");
-                }
+
+    if (size_node->type != AST_INT) {
+        fprintf(stderr, "❌ Error: Array size must be an integer constant\n");
+        return 0;
+    }
+
+    if (size_node->intval <= 0) {
+        fprintf(stderr, "❌ Error: Array size must be a positive integer\n");
+        return 0;
+    }
+
+    *out_size = size_node->intval;
+    return 1;
+}
+
+// 从声明说明符中提取基本类型
+static Type* get_type_from_declaration_specifiers(ASTNode *spec) {
+    if (spec && spec->type == AST_TYPE_NAME) {
+        return type_basic(spec->str);
+    }
+    return type_basic("int"); // 默认类型
+}
+
+static Type* parse_declarator(ASTNode *declr, Type *base_type) {
+    if (!declr) return base_type;
+
+    switch (declr->type) {
+        case TYPE_BASIC:
+            return base_type;
+
+        case TYPE_POINTER:
+            return type_pointer(parse_declarator(declr->ptr_to, base_type));
+
+        case TYPE_ARRAY: {
+            int size;
+            if (!get_array_size(declr->at.size, &size)) {
+                return NULL; // 返回 NULL 表示类型非法
             }
-            // 默认返回 int 类型
-            return type_basic("anon");
+
+            Type *element_type = parse_declarator(declr->at.base, base_type);
+            return type_array(element_type, size);
         }
 
-        case AST_VAR:
-            // 变量名本身不包含类型信息，但可以尝试从上下文获取，或返回默认类型
-            return type_basic("anon");
+        case TYPE_FUNCTION:
+            return type_function(base_type, NULL, 0, 0);
 
-        case AST_TYPE_NAME:
-            // 直接提取类型名
-            if (strcmp(spec_node->str, "int") == 0) return type_basic("int");
-            if (strcmp(spec_node->str, "double") == 0) return type_basic("double");
-            if (strcmp(spec_node->str, "void") == 0) return type_basic("void");
-            return type_basic("anon");
-
-        default:
-            // 其他情况返回默认类型 int
-            return type_basic("anon");
-    }
-}
-
-Type* parse_declarator(ASTNode* node, Type* base_type) {
-    if (!node) return base_type;
-
-    switch (node->type) {
-        case AST_POINTER_TYPE:
-            return type_pointer(parse_declarator(node->ptr_to, base_type));
-        case AST_ARRAY_TYPE:
-            {
-                int size = -1;
-                if (node->at.size && node->at.size->type == AST_INT) {
-                    size = node->at.size->intval;
-                }
-                Type* base = parse_declarator(node->at.base, base_type);
-                return type_array(base, size);
-            }
-        case AST_FUNC_TYPE:
-            {
-                Type* return_type = base_type;
-                Type** param_types = NULL;
-                int param_count = 0;
-                int is_variadic = 0;
-
-                if (node->ft.params && node->ft.params->type == AST_PARAM_LIST) {
-                    for (int i = 0; i < node->ft.params->pl.pcount; ++i) {
-                        ASTNode* param = node->ft.params->pl.params[i];
-                        if (param->type == AST_PARAM) {
-                            Type* param_type = get_type_from_declaration_specifiers(
-                                param->param.dspecs[0]);
-                            param_types = realloc(param_types, (param_count + 1) * sizeof(Type*));
-                            param_types[param_count++] = param_type;
-                        }
-                    }
-                }
-
-                return type_function(return_type, param_types, param_count, is_variadic);
-            }
-        case AST_VAR:
-            return base_type;
         default:
             return base_type;
     }
 }
 
-void build_symbol_table(ASTNode* node, SymbolTable* symtab) {
+// 检查数组大小是否合法
+static int is_valid_array_size(int size) {
+    return size >= 0;
+}
+
+// 检查类型是否合法（如数组大小是否合法）
+static int is_valid_type(Type *type) {
+    if (!type) return 0;
+
+    switch (type->kind) {
+        case TYPE_ARRAY:
+            return type->array.size > 0 && is_valid_type(type->array.base);
+        case TYPE_POINTER:
+            return is_valid_type(type->pointer.base);
+        case TYPE_FUNCTION:
+            for (int i = 0; i < type->function.param_count; ++i) {
+                if (!is_valid_type(type->function.param_types[i])) {
+                    return 0;
+                }
+            }
+            return is_valid_type(type->function.return_type);
+        default:
+            return 1;
+    }
+}
+
+// 检查变量是否已在当前作用域中声明
+static int is_variable_redeclared(SymbolTable *table, const char *name) {
+    Scope *current_scope = table->scopes[table->scope_depth];
+    for (int i = 0; i < current_scope->symbol_count; ++i) {
+        if (strcmp(current_scope->symbols[i]->name, name) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+// 检查函数参数是否重复
+static int is_parameter_redeclared(SymbolTable *table, const char *name, int scope_depth) {
+    Scope *current_scope = table->scopes[scope_depth];
+    for (int i = 0; i < current_scope->symbol_count; ++i) {
+        if (strcmp(current_scope->symbols[i]->name, name) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+// 处理函数参数声明
+static void handle_function_parameters(ASTNode *func, SymbolTable *table) {
+    if (func->type != AST_FUNC_TYPE) return;
+
+    // 进入函数作用域
+    symbol_table_enter_scope(table);
+
+    for (int i = 0; func->ft.params != NULL && i < func->ft.params->pl.pcount; ++i) {
+        ASTNode *param = func->ft.params->pl.params[i];
+
+        if (param->type != AST_DECLARATION) {
+            fprintf(stderr, "❌ Error: Invalid function parameter declaration\n");
+            continue;
+        }
+
+        Type *param_type = get_type_from_declaration_specifiers(param->ds.specs[0]);
+
+        for (int j = 0; j < param->seq.count; ++j) {
+            ASTNode *init_decl = param->seq.list[j];
+            if (init_decl->type != AST_INIT_DECL) continue;
+
+            ASTNode *declr = init_decl->id.declr;
+            Type *type = parse_declarator(declr, param_type);
+
+            if (!is_valid_type(type)) {
+                fprintf(stderr, "❌ Error: Invalid type for parameter '%s'\n", declr->varname);
+                type_free(type);
+                continue;
+            }
+
+            if (is_parameter_redeclared(table, declr->varname, table->scope_depth)) {
+                fprintf(stderr, "❌ Error: Parameter '%s' already declared\n", declr->varname);
+                type_free(type);
+                continue;
+            }
+
+            Symbol *sym = (Symbol *)malloc(sizeof(Symbol));
+            sym->name = strdup(declr->varname);
+            sym->type = type;
+            sym->scope_depth = table->scope_depth;
+            sym->is_constant = 0;
+            sym->is_parameter = 1;
+            sym->ast_node = init_decl;
+
+            symbol_table_add(table, sym);
+        }
+    }
+}
+
+// 递归构建符号表
+static void build_symbol_table_recursive(ASTNode *node, SymbolTable *table) {
     if (!node) return;
 
     switch (node->type) {
-        case AST_EXPR_STMT:
-            build_symbol_table(node->expr, symtab);
-            break;
-
-        case AST_IF:
-            build_symbol_table(node->sif.cond, symtab);
-            build_symbol_table(node->sif.then_s, symtab);
-            if (node->sif.else_s) build_symbol_table(node->sif.else_s, symtab);
-            break;
-
-        case AST_WHILE:
-            build_symbol_table(node->sw.cond, symtab);
-            build_symbol_table(node->sw.body, symtab);
-            break;
-
-        case AST_DO_WHILE:
-            build_symbol_table(node->sdw.body, symtab);
-            build_symbol_table(node->sdw.cond, symtab);
-            break;
-
-        case AST_FOR:
-            build_symbol_table(node->sf.init, symtab);
-            build_symbol_table(node->sf.cond, symtab);
-            build_symbol_table(node->sf.post, symtab);
-            build_symbol_table(node->sf.body, symtab);
-            break;
-
-        case AST_ASSIGN:
-            build_symbol_table(node->assign.l, symtab);
-            build_symbol_table(node->assign.r, symtab);
-            break;
-
-        case AST_CALL:
-            for (int i = 0; i < node->call.argc; ++i) {
-                build_symbol_table(node->call.args[i], symtab);
-            }
-            break;
-
-        case AST_COMPOUND_STMT:
-            symbol_table_enter_scope(symtab);
-            printf("DEBUG: Entering scope %d (compound statement)\n", symtab->scope_depth);
-            for (int i = 0; i < node->seq.count; ++i) {
-                build_symbol_table(node->seq.list[i], symtab);
-            }
-            printf("DEBUG: Current scope %d after processing compound statement:\n", symtab->scope_depth);
-            symbol_table_print(symtab, stdout);
-            symbol_table_leave_scope(symtab);
-            break;
-
-        case AST_DECLARATION:
-            {
-                // 获取声明说明符的类型（如 int, double）
-                Type* base_type = get_type_from_declaration_specifiers(node->declaration.specs[0]);
-
-                // 遍历所有初始化声明符（如变量声明）
-                for (int i = 0; i < node->declaration.icount; ++i) {
-                    ASTNode* init_decl = node->declaration.inits[i];
-
-                    if (init_decl->type == AST_INIT_DECL) {
-                        ASTNode* declr = init_decl->id.declr;
-                        ASTNode* var_node = declr;
-
-                        while (var_node->type == AST_ARRAY_TYPE)
-                            var_node = var_node->at.base;
-
-                        if (var_node->type == AST_VAR) {
-                            Symbol* sym = (Symbol*)malloc(sizeof(Symbol));
-                            sym->name = strdup(var_node->varname);
-                            sym->type = parse_declarator(declr, base_type);
-                            sym->scope_depth = symtab->scope_depth;
-                            sym->is_constant = 0;
-                            sym->is_parameter = 0;
-                            sym->ast_node = init_decl;
-                            symbol_table_add(symtab, sym);
-                        }
-                    }
-                }
-            }
-            break;
-
-        case AST_FUNC_TYPE:
-            {
-                Type* return_type = get_type_from_declaration_specifiers(node->ft.ret_type);
-                Type** param_types = NULL;
-                int param_count = 0;
-
-                if (node->ft.params && node->ft.params->type == AST_PARAM_LIST) {
-                    for (int i = 0; i < node->ft.params->pl.pcount; ++i) {
-                        ASTNode* param = node->ft.params->pl.params[i];
-                        if (param->type == AST_PARAM && param->param.declr && param->param.declr->type == AST_VAR) {
-                            Type* param_type = get_type_from_declaration_specifiers(param->param.dspecs[0]);
-                            param_types = realloc(param_types, (param_count + 1) * sizeof(Type*));
-                            param_types[param_count++] = param_type;
-                        }
-                    }
-                }
-
-                Type* func_type = type_function(return_type, param_types, param_count, 0);
-                Symbol* sym = (Symbol*)malloc(sizeof(Symbol));
-                sym->name = strdup(node->ft.name);
-                sym->type = func_type;
-                sym->scope_depth = symtab->scope_depth;
-                sym->is_constant = 0;
-                sym->is_parameter = 0;
-                sym->ast_node = node;
-                symbol_table_add(symtab, sym);
-
-                symbol_table_enter_scope(symtab);
-                printf("DEBUG: Entering scope %d (function: %s)\n", symtab->scope_depth, node->ft.name);
-
-                if (node->ft.params && node->ft.params->type == AST_PARAM_LIST) {
-                    for (int i = 0; i < node->ft.params->pl.pcount; ++i) {
-                        ASTNode* param = node->ft.params->pl.params[i];
-                        if (param->type == AST_PARAM && param->param.declr && param->param.declr->type == AST_VAR) {
-                            Symbol* param_sym = (Symbol*)malloc(sizeof(Symbol));
-                            param_sym->name = strdup(param->param.declr->varname);
-                            param_sym->type = param_types[i];
-                            param_sym->scope_depth = symtab->scope_depth;
-                            param_sym->is_constant = 0;
-                            param_sym->is_parameter = 1;
-                            param_sym->ast_node = param->param.declr;
-                            symbol_table_add(symtab, param_sym);
-                        }
-                    }
-                }
-
-                build_symbol_table(node->ft.body, symtab);
-
-                printf("DEBUG: Current scope %d (function: %s) after processing body:\n", symtab->scope_depth, node->ft.name);
-                symbol_table_print(symtab, stdout);
-
-                symbol_table_leave_scope(symtab);
-            }
-            break;
-
-        case AST_INIT_LIST:
-            for (int i = 0; i < node->seq.count; ++i) {
-                build_symbol_table(node->seq.list[i], symtab);
-            }
-            break;
-
-        case AST_DESIGNATION:
-            for (int i = 0; i < node->des; ++i) {
-                build_symbol_table(node->des[i], symtab);
-            }
-            break;
-
+        case AST_TRANSLATION_UNIT:
         case AST_EXTERNAL_DECL:
             for (int i = 0; i < node->seq.count; ++i) {
-                build_symbol_table(node->seq.list[i], symtab);
+                build_symbol_table_recursive(node->seq.list[i], table);
             }
             break;
 
-        case AST_TRANSLATION_UNIT:
+        case AST_DECLARATION: {
+            Type *base_type = get_type_from_declaration_specifiers(node->ds.specs[0]);
+        
             for (int i = 0; i < node->seq.count; ++i) {
-                build_symbol_table(node->seq.list[i], symtab);
+                ASTNode *init_decl = node->seq.list[i];
+                if (init_decl->type == AST_INIT_DECL) {
+                    ASTNode *declr = init_decl->id.declr;
+                    Type *type = parse_declarator(declr, base_type);
+        
+                    if (!type) {
+                        // 类型不合法，跳过
+                        continue;
+                    }
+        
+                    if (!is_valid_type(type)) {
+                        fprintf(stderr, "❌ Error: Invalid type for variable '%s'\n", declr->varname);
+                        type_free(type);
+                        continue;
+                    }
+        
+                    if (is_variable_redeclared(table, declr->varname)) {
+                        fprintf(stderr, "❌ Error: Variable '%s' already declared in current scope\n", declr->varname);
+                        type_free(type);
+                        continue;
+                    }
+        
+                    Symbol *sym = (Symbol *)malloc(sizeof(Symbol));
+                    sym->name = strdup(declr->varname);
+                    sym->type = type;
+                    sym->scope_depth = table->scope_depth;
+                    sym->is_constant = 0;
+                    sym->is_parameter = 0;
+                    sym->ast_node = init_decl;
+        
+                    symbol_table_add(table, sym);
+                }
             }
+            break;
+        }
+
+        case AST_FUNC_TYPE: {
+            handle_function_parameters(node, table);
+
+            // 递归处理函数体（进入函数体作用域）
+            if (node->ft.body) {
+                build_symbol_table_recursive(node->ft.body, table);
+            }
+
+            // 离开函数作用域
+            symbol_table_leave_scope(table);
+            break;
+        }
+
+        case AST_COMPOUND_STMT:
+            symbol_table_enter_scope(table);
+            for (int i = 0; i < node->seq.count; ++i) {
+                build_symbol_table_recursive(node->seq.list[i], table);
+            }
+            symbol_table_leave_scope(table);
+            break;
+
+        case AST_EXPR_STMT:
+            // 表达式语句（如赋值、函数调用）的类型检查仍需后续处理
             break;
 
         default:
             break;
     }
+}
+
+// 公共接口：构建符号表并进行类型检查
+void build_symbol_table(ASTNode *root, SymbolTable *table) {
+    build_symbol_table_recursive(root, table);
 }
