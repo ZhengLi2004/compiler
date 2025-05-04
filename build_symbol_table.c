@@ -116,45 +116,75 @@ static void build_symbol_table_recursive(ASTNode *node, SymbolTable *table) {
 
         case AST_FUNC_TYPE: {
             DEBUG(1, "Processing AST_FUNC_TYPE (function name: %s)", node->ft.name ? node->ft.name : "anonymous");
-            DEBUG(2, "Entering function scope (depth: %d)", table->scope_depth + 1);
-            symbol_table_enter_scope(table);
-            symbol_table_print_debug(table, 2);
-
-            // 处理函数参数
+        
+            // 1. 创建函数返回类型
+            Type *return_type = get_type_from_declaration_specifiers(node->ft.ret_type);
+        
+            // 2. 创建参数类型数组
+            Type **param_types = NULL;
+            int param_count = 0;
+        
             if (node->ft.params && node->ft.params->type == AST_PARAM_LIST) {
                 for (int i = 0; i < node->ft.params->pl.pcount; ++i) {
                     ASTNode *param = node->ft.params->pl.params[i];
                     if (param->type == AST_PARAM) {
-                        // 获取参数类型
                         Type *param_type = get_type_from_declaration_specifiers(param->param.dspecs[0]);
                         if (param->param.declr && param->param.declr->type == AST_VAR) {
-                            // 检查重复声明
-                            if (is_variable_redeclared(table, param->param.declr->varname)) {
-                                error_report("Parameter '%s' already declared", param->param.declr->varname);
-                                continue;
-                            }
-
-                            // 创建参数符号
-                            Symbol *param_sym = malloc(sizeof(Symbol));
-                            param_sym->name = strdup(param->param.declr->varname);
-                            param_sym->type = parse_declarator(param->param.declr, param_type);
-                            param_sym->scope_depth = table->scope_depth;
-                            param_sym->is_constant = 0;
-                            param_sym->is_parameter = 1;
-                            param_sym->ast_node = param->param.declr;
-
-                            symbol_table_add(table, param_sym);
-                            DEBUG(2, "Added parameter: %s (type: %s)", param_sym->name, param_sym->type->basic);
+                            param_types = realloc(param_types, (param_count + 1) * sizeof(Type*));
+                            param_types[param_count++] = parse_declarator(param->param.declr, param_type);
                         }
                     }
                 }
             }
-
+        
+            // 3. 创建函数类型
+            Type *func_type = type_function(return_type, param_types, param_count);
+        
+            // 4. 创建函数符号并添加到全局作用域（Scope 0）
+            if (node->ft.name) {
+                Symbol *sym = malloc(sizeof(Symbol));
+                sym->name = strdup(node->ft.name);
+                sym->type = func_type;
+                sym->scope_depth = table->scope_depth; // 应为 0（全局作用域）
+                sym->is_constant = 0;
+                sym->is_parameter = 0;
+                sym->ast_node = node;
+        
+                symbol_table_add(table, sym);
+                DEBUG(2, "Added function: %s (type: %s)", sym->name, sym->type->basic);
+            }
+        
+            // 5. 进入函数体作用域（Scope 1）
+            DEBUG(2, "Entering function scope (depth: %d)", table->scope_depth + 1);
+            symbol_table_enter_scope(table);
+            symbol_table_print_debug(table, 2);
+        
+            // 6. 处理参数（添加到函数作用域）
+            if (node->ft.params && node->ft.params->type == AST_PARAM_LIST) {
+                for (int i = 0; i < node->ft.params->pl.pcount; ++i) {
+                    ASTNode *param = node->ft.params->pl.params[i];
+                    if (param->type == AST_PARAM && param->param.declr && param->param.declr->type == AST_VAR) {
+                        Symbol *param_sym = malloc(sizeof(Symbol));
+                        param_sym->name = strdup(param->param.declr->varname);
+                        param_sym->type = param_types[i];
+                        param_sym->scope_depth = table->scope_depth; // 应为 1（函数作用域）
+                        param_sym->is_constant = 0;
+                        param_sym->is_parameter = 1;
+                        param_sym->ast_node = param->param.declr;
+        
+                        symbol_table_add(table, param_sym);
+                        DEBUG(2, "Added parameter: %s (type: %s)", param_sym->name, param_sym->type->basic);
+                    }
+                }
+            }
+        
+            // 7. 处理函数体
             if (node->ft.body) {
                 DEBUG(2, "Processing function body");
                 build_symbol_table_recursive(node->ft.body, table);
             }
-
+        
+            // 8. 离开函数作用域
             symbol_table_leave_scope(table);
             DEBUG(2, "Leaving function scope (depth: %d)", table->scope_depth);
             symbol_table_print_debug(table, 2);
