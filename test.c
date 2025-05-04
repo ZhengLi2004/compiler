@@ -1,5 +1,5 @@
 int main() {
-    int a=3.0;
-    double b;
-    b=a;
+    int b[5];
+    int a[-1];
+    b = a;
 }

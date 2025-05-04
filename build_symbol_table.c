@@ -1,249 +1,448 @@
-#include "build_symbol_table.h"
-#include "ast.h"
-#include "type.h"
-#include "symbol_table.h"
-#include "type.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "ast.h"
+#include "symbol_table.h"
+#include "type.h"
 
-// 提取数组大小并验证是否合法
-static int get_array_size(ASTNode *size_node, int *out_size) {
-    if (!size_node) {
-        fprintf(stderr, "❌ Error: Missing array size\n");
-        return 0;
-    }
+// 调试级别控制
+int debug_level = 3;  // 可调整为 0-3，3 输出最详细信息
 
-    if (size_node->type != AST_INT) {
-        fprintf(stderr, "❌ Error: Array size must be an integer constant\n");
-        return 0;
-    }
+#define DEBUG(level, fmt, ...) \
+    if (debug_level >= level) fprintf(stderr, "[DEBUG] " fmt "\n", ##__VA_ARGS__)
 
-    if (size_node->intval <= 0) {
-        fprintf(stderr, "❌ Error: Array size must be a positive integer\n");
-        return 0;
-    }
+// 前向声明
+Type* get_expression_type(ASTNode *expr, SymbolTable *table);
+int type_compatible(Type *lhs, Type *rhs);
+Type* get_type_from_declaration_specifiers(ASTNode *spec);
+Type* parse_declarator(ASTNode *declr, Type *base_type);
+int is_valid_type(Type *type);
+int is_variable_redeclared(SymbolTable *table, const char *name);
+void handle_function_parameters(ASTNode *func, SymbolTable *table);
+Type* get_function_return_type(SymbolTable *table);
+int is_in_loop(SymbolTable *table);
 
-    *out_size = size_node->intval;
-    return 1;
-}
-
-// 从声明说明符中提取基本类型
-static Type* get_type_from_declaration_specifiers(ASTNode *spec) {
-    if (spec && spec->type == AST_TYPE_NAME) {
-        return type_basic(spec->str);
-    }
-    return type_basic("int"); // 默认类型
-}
-
-static Type* parse_declarator(ASTNode *declr, Type *base_type) {
-    if (!declr) return base_type;
-
-    switch (declr->type) {
-        case TYPE_BASIC:
-            return base_type;
-
-        case TYPE_POINTER:
-            return type_pointer(parse_declarator(declr->ptr_to, base_type));
-
-        case TYPE_ARRAY: {
-            int size;
-            if (!get_array_size(declr->at.size, &size)) {
-                return NULL; // 返回 NULL 表示类型非法
+// 打印符号表调试信息
+void symbol_table_print_debug(SymbolTable *table, int level) {
+    if (debug_level < level) return;
+    DEBUG(level, "Current Symbol Table (scope depth: %d)", table->scope_depth);
+    for (int i = 0; i <= table->scope_depth; ++i) {
+        Scope *scope = table->scopes[i];
+        DEBUG(level, "Scope %d:", i);
+        for (int j = 0; j < scope->symbol_count; ++j) {
+            Symbol *sym = scope->symbols[j];
+            if (sym && sym->type) {
+                DEBUG(level+1, "  %s: %s", sym->name, sym->type->basic);
             }
-
-            Type *element_type = parse_declarator(declr->at.base, base_type);
-            return type_array(element_type, size);
-        }
-
-        case TYPE_FUNCTION:
-            return type_function(base_type, NULL, 0, 0);
-
-        default:
-            return base_type;
-    }
-}
-
-// 检查数组大小是否合法
-static int is_valid_array_size(int size) {
-    return size >= 0;
-}
-
-// 检查类型是否合法（如数组大小是否合法）
-static int is_valid_type(Type *type) {
-    if (!type) return 0;
-
-    switch (type->kind) {
-        case TYPE_ARRAY:
-            return type->array.size > 0 && is_valid_type(type->array.base);
-        case TYPE_POINTER:
-            return is_valid_type(type->pointer.base);
-        case TYPE_FUNCTION:
-            for (int i = 0; i < type->function.param_count; ++i) {
-                if (!is_valid_type(type->function.param_types[i])) {
-                    return 0;
-                }
-            }
-            return is_valid_type(type->function.return_type);
-        default:
-            return 1;
-    }
-}
-
-// 检查变量是否已在当前作用域中声明
-static int is_variable_redeclared(SymbolTable *table, const char *name) {
-    Scope *current_scope = table->scopes[table->scope_depth];
-    for (int i = 0; i < current_scope->symbol_count; ++i) {
-        if (strcmp(current_scope->symbols[i]->name, name) == 0) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-// 检查函数参数是否重复
-static int is_parameter_redeclared(SymbolTable *table, const char *name, int scope_depth) {
-    Scope *current_scope = table->scopes[scope_depth];
-    for (int i = 0; i < current_scope->symbol_count; ++i) {
-        if (strcmp(current_scope->symbols[i]->name, name) == 0) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-// 处理函数参数声明
-static void handle_function_parameters(ASTNode *func, SymbolTable *table) {
-    if (func->type != AST_FUNC_TYPE) return;
-
-    // 进入函数作用域
-    symbol_table_enter_scope(table);
-
-    for (int i = 0; func->ft.params != NULL && i < func->ft.params->pl.pcount; ++i) {
-        ASTNode *param = func->ft.params->pl.params[i];
-
-        if (param->type != AST_DECLARATION) {
-            fprintf(stderr, "❌ Error: Invalid function parameter declaration\n");
-            continue;
-        }
-
-        Type *param_type = get_type_from_declaration_specifiers(param->ds.specs[0]);
-
-        for (int j = 0; j < param->seq.count; ++j) {
-            ASTNode *init_decl = param->seq.list[j];
-            if (init_decl->type != AST_INIT_DECL) continue;
-
-            ASTNode *declr = init_decl->id.declr;
-            Type *type = parse_declarator(declr, param_type);
-
-            if (!is_valid_type(type)) {
-                fprintf(stderr, "❌ Error: Invalid type for parameter '%s'\n", declr->varname);
-                type_free(type);
-                continue;
-            }
-
-            if (is_parameter_redeclared(table, declr->varname, table->scope_depth)) {
-                fprintf(stderr, "❌ Error: Parameter '%s' already declared\n", declr->varname);
-                type_free(type);
-                continue;
-            }
-
-            Symbol *sym = (Symbol *)malloc(sizeof(Symbol));
-            sym->name = strdup(declr->varname);
-            sym->type = type;
-            sym->scope_depth = table->scope_depth;
-            sym->is_constant = 0;
-            sym->is_parameter = 1;
-            sym->ast_node = init_decl;
-
-            symbol_table_add(table, sym);
         }
     }
 }
 
-// 递归构建符号表
 static void build_symbol_table_recursive(ASTNode *node, SymbolTable *table) {
-    if (!node) return;
+    DEBUG(1, "Entering build_symbol_table_recursive (type: %d)", node ? node->type : -1);
+    if (!node) {
+        DEBUG(1, "Node is NULL. Exiting.");
+        return;
+    }
 
     switch (node->type) {
         case AST_TRANSLATION_UNIT:
         case AST_EXTERNAL_DECL:
+            DEBUG(1, "Processing AST_TRANSLATION_UNIT/EXTERNAL_DECL (count: %d)", node->seq.count);
             for (int i = 0; i < node->seq.count; ++i) {
+                DEBUG(2, "Processing seq[%d] (type: %d)", i, node->seq.list[i]->type);
                 build_symbol_table_recursive(node->seq.list[i], table);
             }
             break;
 
         case AST_DECLARATION: {
-            Type *base_type = get_type_from_declaration_specifiers(node->ds.specs[0]);
-        
-            for (int i = 0; i < node->seq.count; ++i) {
-                ASTNode *init_decl = node->seq.list[i];
+            DEBUG(1, "Processing AST_DECLARATION (specs count: %d)", node->declaration.scount);
+            Type *base_type = get_type_from_declaration_specifiers(node->declaration.specs[0]);
+            DEBUG(2, "Base type: %s", base_type ? base_type->basic : "NULL");
+
+            for (int i = 0; i < node->declaration.icount; ++i) {
+                ASTNode *init_decl = node->declaration.inits[i];
+                DEBUG(3, "Processing init_decl[%d] (type: %d)", i, init_decl->type);
                 if (init_decl->type == AST_INIT_DECL) {
                     ASTNode *declr = init_decl->id.declr;
+                    DEBUG(3, "Declaring variable: %s", declr->varname);
                     Type *type = parse_declarator(declr, base_type);
-        
-                    if (!type) {
-                        // 类型不合法，跳过
-                        continue;
-                    }
-        
+                    DEBUG(3, "Parsed type for %s: %s", declr->varname, type ? type->basic : "NULL");
+
+                    if (!type) continue;
+
                     if (!is_valid_type(type)) {
-                        fprintf(stderr, "❌ Error: Invalid type for variable '%s'\n", declr->varname);
+                        DEBUG(1, "Invalid type for variable '%s'", declr->varname);
                         type_free(type);
                         continue;
                     }
-        
+
                     if (is_variable_redeclared(table, declr->varname)) {
-                        fprintf(stderr, "❌ Error: Variable '%s' already declared in current scope\n", declr->varname);
+                        DEBUG(1, "Variable '%s' already declared", declr->varname);
                         type_free(type);
                         continue;
                     }
-        
-                    Symbol *sym = (Symbol *)malloc(sizeof(Symbol));
+
+                    Symbol *sym = malloc(sizeof(Symbol));
                     sym->name = strdup(declr->varname);
                     sym->type = type;
                     sym->scope_depth = table->scope_depth;
                     sym->is_constant = 0;
                     sym->is_parameter = 0;
                     sym->ast_node = init_decl;
-        
+
                     symbol_table_add(table, sym);
+                    DEBUG(2, "Added symbol: %s (type: %s)", sym->name, sym->type->basic);
+                }
+            }
+            symbol_table_print_debug(table, 2);
+            break;
+        }
+
+        case AST_FUNC_TYPE: {
+            DEBUG(1, "Processing AST_FUNC_TYPE (function name: %s)", node->ft.name ? node->ft.name : "anonymous");
+            DEBUG(2, "Entering function scope (depth: %d)", table->scope_depth + 1);
+            symbol_table_enter_scope(table);
+            symbol_table_print_debug(table, 2);
+            handle_function_parameters(node, table);
+
+            if (node->ft.body) {
+                DEBUG(2, "Processing function body");
+                build_symbol_table_recursive(node->ft.body, table);
+            }
+
+            symbol_table_leave_scope(table);
+            DEBUG(2, "Leaving function scope (depth: %d)", table->scope_depth);
+            symbol_table_print_debug(table, 2);
+            break;
+        }
+
+        case AST_COMPOUND_STMT:
+            DEBUG(1, "Processing AST_COMPOUND_STMT (count: %d)", node->seq.count);
+            DEBUG(2, "Entering new scope (depth: %d)", table->scope_depth + 1);
+            symbol_table_enter_scope(table);
+            symbol_table_print_debug(table, 2);
+
+            for (int i = 0; i < node->seq.count; ++i) {
+                DEBUG(3, "Processing compound stmt[%d] (type: %d)", i, node->seq.list[i]->type);
+                build_symbol_table_recursive(node->seq.list[i], table);
+            }
+
+            DEBUG(2, "Leaving scope (depth: %d)", table->scope_depth);
+            symbol_table_leave_scope(table);
+            symbol_table_print_debug(table, 2);
+            break;
+
+        case AST_VAR: {
+            DEBUG(2, "Processing AST_VAR: %s", node->varname);
+            Symbol *sym = symbol_table_lookup(table, node->varname);
+            if (!sym) {
+                DEBUG(1, "Undefined variable '%s'", node->varname);
+            }
+            break;
+        }
+
+        case AST_ASSIGN: {
+            DEBUG(2, "Processing assignment to %s", node->assign.l->varname);
+            build_symbol_table_recursive(node->assign.l, table);
+            build_symbol_table_recursive(node->assign.r, table);
+
+            Type *lhs_type = get_expression_type(node->assign.l, table);
+            Type *rhs_type = get_expression_type(node->assign.r, table);
+            DEBUG(3, "Assignment types: %s = %s", lhs_type ? lhs_type->basic : "NULL", rhs_type ? rhs_type->basic : "NULL");
+
+            if (!type_compatible(lhs_type, rhs_type)) {
+                DEBUG(1, "Type mismatch in assignment to '%s'", node->assign.l->varname);
+            }
+            break;
+        }
+
+        case AST_BINOP: {
+            DEBUG(2, "Processing binary op: %c", node->bin.op);
+            build_symbol_table_recursive(node->bin.lhs, table);
+            build_symbol_table_recursive(node->bin.rhs, table);
+
+            Type *lhs_type = get_expression_type(node->bin.lhs, table);
+            Type *rhs_type = get_expression_type(node->bin.rhs, table);
+            DEBUG(3, "Binary op types: %s %c %s", lhs_type ? lhs_type->basic : "NULL", node->bin.op, rhs_type ? rhs_type->basic : "NULL");
+
+            if ((node->bin.op == '+' || node->bin.op == '-' || node->bin.op == '*' || node->bin.op == '/') &&
+                (!lhs_type || !rhs_type || lhs_type->kind != TYPE_BASIC || rhs_type->kind != TYPE_BASIC)) {
+                DEBUG(1, "Arithmetic operation requires scalar types");
+            }
+
+            if ((node->bin.op == '==' || node->bin.op == '!=' || node->bin.op == '<' || node->bin.op == '>') &&
+                (!type_compatible(lhs_type, rhs_type))) {
+                DEBUG(1, "Comparison requires compatible types");
+            }
+            break;
+        }
+
+        case AST_CALL: {
+            DEBUG(2, "Processing function call: %s", node->call.fname);
+            Symbol *func = symbol_table_lookup(table, node->call.fname);
+            if (!func || func->type->kind != TYPE_FUNCTION) {
+                DEBUG(1, "Undefined or non-function symbol '%s'", node->call.fname);
+                break;
+            }
+
+            Type *func_type = func->type;
+            DEBUG(2, "Function '%s' has %d parameters", node->call.fname, func_type->function.param_count);
+            if (node->call.argc != func_type->function.param_count) {
+                DEBUG(1, "Argument count mismatch in call to '%s'", node->call.fname);
+                break;
+            }
+
+            for (int i = 0; i < node->call.argc; ++i) {
+                Type *expected = func_type->function.param_types[i];
+                Type *actual = get_expression_type(node->call.args[i], table);
+                DEBUG(3, "Arg[%d] type check: expected %s, got %s", i, expected->basic, actual ? actual->basic : "NULL");
+                if (!type_compatible(expected, actual)) {
+                    DEBUG(1, "Argument type mismatch in call to '%s' at position %d", node->call.fname, i);
                 }
             }
             break;
         }
 
-        case AST_FUNC_TYPE: {
-            handle_function_parameters(node, table);
-
-            // 递归处理函数体（进入函数体作用域）
-            if (node->ft.body) {
-                build_symbol_table_recursive(node->ft.body, table);
+        case AST_RETURN: {
+            DEBUG(2, "Processing return statement");
+            if (node->expr) {
+                build_symbol_table_recursive(node->expr, table);
             }
 
-            // 离开函数作用域
-            symbol_table_leave_scope(table);
+            Type *func_return_type = get_function_return_type(table);
+            Type *return_type = node->expr ? get_expression_type(node->expr, table) : NULL;
+            DEBUG(3, "Return types: expected %s, got %s", 
+                func_return_type ? func_return_type->basic : "void",
+                return_type ? return_type->basic : "void");
+
+            if (!func_return_type && node->expr) {
+                DEBUG(1, "Return statement outside function");
+            } else if (func_return_type && func_return_type->kind == TYPE_BASIC && 
+                      strcmp(func_return_type->basic, "void") == 0 && node->expr) {
+                DEBUG(1, "Return value from void function");
+            } else if (func_return_type && node->expr && !type_compatible(func_return_type, return_type)) {
+                DEBUG(1, "Return type mismatch");
+            }
             break;
         }
 
-        case AST_COMPOUND_STMT:
-            symbol_table_enter_scope(table);
-            for (int i = 0; i < node->seq.count; ++i) {
-                build_symbol_table_recursive(node->seq.list[i], table);
+        case AST_IF: {
+            DEBUG(2, "Processing if statement");
+            build_symbol_table_recursive(node->sif.cond, table);
+            build_symbol_table_recursive(node->sif.then_s, table);
+            if (node->sif.else_s) {
+                build_symbol_table_recursive(node->sif.else_s, table);
             }
-            symbol_table_leave_scope(table);
+
+            Type *cond_type = get_expression_type(node->sif.cond, table);
+            DEBUG(3, "If condition type: %s", cond_type ? cond_type->basic : "NULL");
+            if (cond_type && cond_type->kind != TYPE_BASIC) {
+                DEBUG(1, "If condition must be a scalar type");
+            }
             break;
+        }
+
+        case AST_WHILE:
+        case AST_DO_WHILE:
+        case AST_FOR: {
+            DEBUG(2, "Processing loop statement (type: %d)", node->type);
+            ASTNode *cond = node->type == AST_DO_WHILE ? node->sdw.cond :
+                           (node->type == AST_FOR ? node->sf.cond : node->sw.cond);
+            ASTNode *body = node->type == AST_DO_WHILE ? node->sdw.body :
+                           (node->type == AST_FOR ? node->sf.body : node->sw.body);
+
+            build_symbol_table_recursive(cond, table);
+            build_symbol_table_recursive(body, table);
+
+            Type *cond_type = get_expression_type(cond, table);
+            DEBUG(3, "Loop condition type: %s", cond_type ? cond_type->basic : "NULL");
+            if (cond_type && cond_type->kind != TYPE_BASIC) {
+                DEBUG(1, "Loop condition must be a scalar type");
+            }
+            break;
+        }
+
+        case AST_BREAK:
+        case AST_CONTINUE: {
+            DEBUG(2, "Processing %s statement", node->type == AST_BREAK ? "break" : "continue");
+            if (!is_in_loop(table)) {
+                DEBUG(1, "'%s' statement outside loop", node->type == AST_BREAK ? "break" : "continue");
+            }
+            break;
+        }
 
         case AST_EXPR_STMT:
-            // 表达式语句（如赋值、函数调用）的类型检查仍需后续处理
+            DEBUG(2, "Processing expression statement");
+            if (node->expr) {
+                build_symbol_table_recursive(node->expr, table);
+            }
             break;
 
         default:
+            DEBUG(2, "Ignoring unhandled node type: %d", node->type);
             break;
+    }
+
+    DEBUG(1, "Exiting build_symbol_table_recursive (type: %d)", node->type);
+}
+
+// 以下为辅助函数的简化实现（需根据实际代码补充完整）
+Type* get_expression_type(ASTNode *expr, SymbolTable *table) {
+    if (!expr) return NULL;
+    switch (expr->type) {
+        case AST_VAR: {
+            Symbol *sym = symbol_table_lookup(table, expr->varname);
+            return sym ? sym->type : NULL;
+        }
+        case AST_INT: return type_basic("int");
+        case AST_DOUBLE: return type_basic("double");
+        case AST_ASSIGN: return get_expression_type(expr->assign.l, table);
+        case AST_CALL: {
+            Symbol *func = symbol_table_lookup(table, expr->call.fname);
+            return func && func->type->kind == TYPE_FUNCTION ? func->type->function.return_type : NULL;
+        }
+        default: return NULL;
     }
 }
 
-// 公共接口：构建符号表并进行类型检查
+int type_compatible(Type *lhs, Type *rhs) {
+    if (!lhs || !rhs) return 0;
+    if (lhs == rhs) return 1;
+    if (lhs->kind != rhs->kind) return 0;
+    switch (lhs->kind) {
+        case TYPE_BASIC: return strcmp(lhs->basic, rhs->basic) == 0;
+        case TYPE_POINTER: return type_compatible(lhs->pointer.base, rhs->pointer.base);
+        case TYPE_ARRAY: return lhs->array.size == rhs->array.size && 
+                                 type_compatible(lhs->array.base, rhs->array.base);
+        case TYPE_FUNCTION: return type_compatible(lhs->function.return_type, rhs->function.return_type) &&
+                                 lhs->function.param_count == rhs->function.param_count;
+        default: return 0;
+    }
+}
+
+Type* get_type_from_declaration_specifiers(ASTNode* spec_node) {
+    if (!spec_node) {
+        return type_basic("int");
+    }
+    switch (spec_node->type) {
+        case AST_DECL_SPEC: {
+            for (int i = 0; i < spec_node->ds.scount; ++i) {
+                ASTNode* spec = spec_node->ds.specs[i];
+                if (spec->type == AST_TYPE_NAME) {
+                    const char* name = spec->str;
+                    if (strcmp(name, "int") == 0) return type_basic("int");
+                    if (strcmp(name, "double") == 0) return type_basic("double");
+                    if (strcmp(name, "void") == 0) return type_basic("void");
+                }
+            }
+            // 默认返回 int 类型
+            return type_basic("anon");
+        }
+
+        case AST_VAR:
+            // 变量名本身不包含类型信息，但可以尝试从上下文获取，或返回默认类型
+            return type_basic("anon");
+
+        case AST_TYPE_NAME:
+            // 直接提取类型名
+            if (strcmp(spec_node->str, "int") == 0) return type_basic("int");
+            if (strcmp(spec_node->str, "double") == 0) return type_basic("double");
+            if (strcmp(spec_node->str, "void") == 0) return type_basic("void");
+            return type_basic("anon");
+
+        default:
+            // 其他情况返回默认类型 int
+            return type_basic("anon");
+    }
+}
+
+Type* parse_declarator(ASTNode *declr, Type *base_type) {
+    if (!declr) return base_type;
+    switch (declr->type) {
+        case AST_VAR: return base_type;
+        case AST_POINTER_TYPE: return type_pointer(parse_declarator(declr->ptr_to, base_type));
+        case AST_ARRAY_TYPE: {
+            int size;
+            if (!get_array_size(declr->at.size, &size)) return NULL;
+            return type_array(parse_declarator(declr->at.base, base_type), size);
+        }
+        default: return base_type;
+    }
+}
+
+int is_valid_type(Type *type) {
+    if (!type) return 0;
+    switch (type->kind) {
+        case TYPE_ARRAY: return type->array.size > 0 && is_valid_type(type->array.base);
+        case TYPE_POINTER: return is_valid_type(type->pointer.base);
+        case TYPE_FUNCTION: return is_valid_type(type->function.return_type);
+        default: return 1;
+    }
+}
+
+int is_variable_redeclared(SymbolTable *table, const char *name) {
+    Scope *current = table->scopes[table->scope_depth];
+    for (int i = 0; i < current->symbol_count; ++i) {
+        if (strcmp(current->symbols[i]->name, name) == 0) return 1;
+    }
+    return 0;
+}
+
+void handle_function_parameters(ASTNode *func, SymbolTable *table) {
+    if (func->type != AST_FUNC_TYPE) return;
+    if (!func->ft.params || func->ft.params->type != AST_PARAM_LIST) return;
+    
+    ASTNode *params_list = func->ft.params;
+    for (int i = 0; i < params_list->pl.pcount; ++i) {
+        ASTNode *param_node = params_list->pl.params[i];
+        if (param_node->type != AST_PARAM) continue;
+        
+        ASTNode *param = param_node;
+        if (param->param.dcount <= 0 || !param->param.dspecs) continue;
+        
+        Type *param_type = get_type_from_declaration_specifiers(param->param.dspecs[0]);
+        for (int j = 0; j < param->param.dcount; ++j) {
+            ASTNode *init_decl = param->param.dspecs[j];
+            if (init_decl->type != AST_INIT_DECL) continue;
+            
+            ASTNode *declr = init_decl->id.declr;
+            Type *type = parse_declarator(declr, param_type);
+            if (!is_valid_type(type)) continue;
+            
+            if (is_variable_redeclared(table, declr->varname)) continue;
+            
+            Symbol *sym = malloc(sizeof(Symbol));
+            sym->name = strdup(declr->varname);
+            sym->type = type;
+            sym->scope_depth = table->scope_depth;
+            sym->is_constant = 0;
+            sym->is_parameter = 1;
+            sym->ast_node = init_decl;
+            symbol_table_add(table, sym);
+        }
+    }
+}
+
+Type* get_function_return_type(SymbolTable *table) {
+    // 实现取决于你的上下文管理逻辑
+    return type_basic("int"); // 示例返回
+}
+
+int is_in_loop(SymbolTable *table) {
+    // 实现取决于你的上下文管理逻辑
+    return 1; // 示例返回
+}
+
+// 数组大小检查函数
+int get_array_size(ASTNode *size_node, int *out_size) {
+    if (!size_node) return 0;
+    if (size_node->type != AST_INT) return 0;
+    if (size_node->intval <= 0) return 0;
+    *out_size = size_node->intval;
+    return 1;
+}
+
 void build_symbol_table(ASTNode *root, SymbolTable *table) {
     build_symbol_table_recursive(root, table);
-}
+};
