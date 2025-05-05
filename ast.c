@@ -18,10 +18,10 @@ ASTNode *ast_int(int v) {
 ASTNode *ast_double(double d) {
     ASTNode *n = calloc(1, sizeof(*n));
     n->type = AST_DOUBLE; n->fval = d; return n;
-};
+}
 ASTNode *ast_var(const char *name) {
     if(name == NULL) {
-        printf(stderr, "Error, NULL name passed to ast_var()\n");
+        printf("Error, NULL name passed to ast_var()\n");
         return NULL;
     }
     ASTNode *n = calloc(1, sizeof(*n));
@@ -149,10 +149,6 @@ ASTNode *ast_init_list(ASTNode **inits, int n) {
     ASTNode *node = calloc(1,sizeof(*node));
     node->type = AST_INIT_LIST; node->seq.list = inits; node->seq.count = n;
     return node;
-}
-ASTNode *ast_designation(ASTNode **ds, int n) {
-    ASTNode *node = calloc(1,sizeof(*node));
-    node->type = AST_DESIGNATION; node->des = ds; return node;
 }
 ASTNode *ast_type_name(const char *name) {
     ASTNode *node = calloc(1,sizeof(*node));
@@ -314,10 +310,6 @@ void ast_print(ASTNode *node, int indent) {
             printf("InitList [%d]\n", node->seq.count);
             for (int i = 0; i < node->seq.count; i++)
                 ast_print(node->seq.list[i], indent + 1);
-            break;
-        case AST_DESIGNATION:
-            printf("Designation\n");
-            /* designator 列表本身用 ASTList 存储 */
             break;
         default:
             printf("UnknownNode(type=%d)\n", node->type);

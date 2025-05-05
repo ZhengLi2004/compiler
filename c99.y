@@ -44,8 +44,7 @@
                   exclusive_or_expression inclusive_or_expression
                   logical_and_expression logical_or_expression
                   conditional_expression assignment_expression
-                  expression constant_expression
-                  declaration declaration_specifiers
+                  expression declaration declaration_specifiers
                   init_declarator declarator direct_declarator
                   parameter_declaration abstract_declarator
                   direct_abstract_declarator initializer
@@ -53,12 +52,12 @@
                   block_item expression_statement
                   selection_statement iteration_statement
                   jump_statement external_declaration
-                  function_definition translation_unit designator type_specifier designation
+                  function_definition translation_unit type_specifier
 
 %type  <list>     argument_expression_list init_declarator_list
                   parameter_list parameter_type_list
                   identifier_list initializer_list
-                  designator_list block_item_list
+                  block_item_list
 
 %start translation_unit
 
@@ -266,11 +265,6 @@ expression
         }
     ;
 
-constant_expression
-    : conditional_expression
-        { $$ = $1; }
-    ;
-
 /* ---------------------------- */
 /* Declarations & Types         */
 /* ---------------------------- */
@@ -475,43 +469,6 @@ initializer_list
             $1.items[$1.count++] = $3;
             $$ = $1;
         }
-    | designation initializer
-        {
-            /* designator + init 都视为一个节点列表 */
-            $$.items = malloc(sizeof(ASTNode*) * 2);
-            $$.items[0] = $1;
-            $$.items[1] = $2;
-            $$.count    = 2;
-        }
-    ;
-
-/* Designation & Designator-list */
-designation
-    : designator_list '='
-        { $$ = ast_designation($1.items, $1.count); }
-    ;
-
-designator_list
-    : designator
-        {
-            $$.items = malloc(sizeof(ASTNode*));
-            $$.items[0] = $1;
-            $$.count    = 1;
-        }
-    | designator_list designator
-        {
-            $1.items = realloc($1.items,
-                               sizeof(ASTNode*) * ($1.count + 1));
-            $1.items[$1.count++] = $2;
-            $$ = $1;
-        }
-    ;
-
-designator
-    : '[' constant_expression ']'
-        { $$ = $2; }
-    | '.' IDENTIFIER
-        { $$ = ast_var($2); }
     ;
 
 /* Statements */
@@ -602,22 +559,6 @@ function_definition
             }
         }
     ;
-
-/* declaration_list
-    : declaration
-        {
-            $$.items = malloc(sizeof(ASTNode*));
-            $$.items[0] = $1;
-            $$.count    = 1;
-        }
-    | declaration_list declaration
-        {
-            $1.items = realloc($1.items,
-                               sizeof(ASTNode*) * ($1.count + 1));
-            $1.items[$1.count++] = $2;
-            $$ = $1;
-        }
-    ; */
 
 translation_unit
     : external_declaration

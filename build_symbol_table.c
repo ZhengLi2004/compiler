@@ -259,7 +259,7 @@ static void build_symbol_table_recursive(ASTNode *node, SymbolTable *table) {
                 error_report("Arithmetic operation requires scalar types");
             }
 
-            if ((node->bin.op == '==' || node->bin.op == '!=' || node->bin.op == '<' || node->bin.op == '>') &&
+            if ((node->bin.op == 'e' || node->bin.op == '!' || node->bin.op == '<' || node->bin.op == '>') &&
                 (!type_compatible(lhs_type, rhs_type))) {
                 error_report("Comparison requires compatible types");
             }
@@ -371,13 +371,6 @@ static void build_symbol_table_recursive(ASTNode *node, SymbolTable *table) {
             DEBUG(1, "Processing AST_INIT_LIST (count: %d)", node->seq.count);
             for (int i = 0; i < node->seq.count; ++i) {
                 build_symbol_table_recursive(node->seq.list[i], table);
-            }
-            break;
-
-        case AST_DESIGNATION:
-            DEBUG(1, "Processing AST_DESIGNATION (count: %d)", node->des);
-            for (int i = 0; i < node->des; ++i) {
-                build_symbol_table_recursive(node->des[i], table);
             }
             break;
 
@@ -597,4 +590,4 @@ int get_array_size(ASTNode *size_node, int *out_size) {
 
 void build_symbol_table(ASTNode *root, SymbolTable *table) {
     build_symbol_table_recursive(root, table);
-};
+}

@@ -2,6 +2,7 @@
 #define SYMBOL_TABLE_H
 
 #include "symbol.h"
+#include <llvm-c/Core.h>
 
 typedef struct SymbolTable {
     int scope_depth;
@@ -13,6 +14,8 @@ typedef struct Scope {
     Symbol** symbols;
     int symbol_count;
 } Scope;
+
+Symbol* symbol_create(const char *name, LLVMTypeRef type, int scope_depth, int is_constant, int is_parameter, ASTNode *ast_node);
 
 SymbolTable* symbol_table_create();
 void symbol_table_enter_scope(SymbolTable* table);

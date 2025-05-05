@@ -1,6 +1,8 @@
 #ifndef AST_H
 #define AST_H
 
+#include <stdlib.h>
+
 /* AST 节点种类 */
 typedef enum {
     /* 基本表达式 */
@@ -36,7 +38,6 @@ typedef enum {
     AST_PARAM_LIST,
     AST_PARAM,
     AST_INIT_LIST,
-    AST_DESIGNATION,
     AST_TYPE_NAME
 
 } ASTNodeType;
@@ -109,9 +110,6 @@ struct ASTNode {
         /* AST_PARAM */
         struct { ASTNode **dspecs; int dcount; ASTNode *declr; } param;
 
-        /* AST_DESIGNATION */
-        ASTNode **des; /* array of designators */
-
         /* AST_DECLARATION */
         struct {
             ASTNode **specs; int scount;
@@ -120,13 +118,6 @@ struct ASTNode {
     };
 };
 
-/* 辅助：可变节点数组扩容 */
-static ASTNode **append_node(ASTNode **arr, int *cnt, ASTNode *n) {
-    arr = realloc(arr, sizeof(ASTNode*) * (*cnt + 1));
-    arr[*cnt] = n;
-    (*cnt)++;
-    return arr;
-}
 /* 构造函数 */
 ASTNode *ast_int(int v);
 ASTNode *ast_double(double d);
@@ -160,7 +151,6 @@ ASTNode *ast_param_list(ASTNode **ps, int n);
 ASTNode *ast_param(ASTNode **specs, int sn, ASTNode *declr);
 
 ASTNode *ast_init_list(ASTNode **inits, int n);
-ASTNode *ast_designation(ASTNode **ds, int n);
 
 ASTNode *ast_type_name(const char *name);
 

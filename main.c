@@ -3,6 +3,8 @@
 #include "ast.h"
 #include "c99.tab.h"
 #include "symbol_table.h"
+#include "code_generator.h"
+#include "build_symbol_table.h"
 
 extern FILE* yyin;
 extern int yyparse();
@@ -36,16 +38,20 @@ int main(int argc, char* argv[]) {
     printf("✅ Symbol table built:\n");
     symbol_table_print(symtab, stdout);
 
-    // // 类型检查
-    // if (type_check_ast(ast_root, symtab) == 0) {
-    //     printf("✅ Type check passed\n");
-    // } else {
-    //     printf("❌ Type check failed\n");
-    //     fclose(yyin);
-    //     return 1;
-    // }
-
+    // 创建代码生成器
+    CodeGenerator *gen = codegen_create(symtab);
+    
+    // 生成IR
+    LLVMModuleRef module = codegen_generate(gen, ast_root);
+    
+    // 输出IR到文件
+    char *ir = LLVMPrintModuleToString(module);
+    FILE *out = fopen("output.ll", "w");
+    fprintf(out, "%s", ir);
+    fclose(out);
+    
     // 清理
+    codegen_free(gen);
     symbol_table_free(symtab);
     ast_free(ast_root);
     fclose(yyin);
