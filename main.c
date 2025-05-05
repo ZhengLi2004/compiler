@@ -51,9 +51,6 @@ int main(int argc, char* argv[]) {
     fclose(out);
     
     // 清理
-    codegen_free(gen);
-    symbol_table_free(symtab);
-    ast_free(ast_root);
     fclose(yyin);
     return 0;
 }

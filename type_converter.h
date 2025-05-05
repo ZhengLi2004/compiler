@@ -9,7 +9,6 @@ typedef struct {
 } TypeConverter;
 
 TypeConverter* type_converter_create(LLVMContextRef context);
-void type_converter_free(TypeConverter *converter);
 
 LLVMTypeRef convert_ast_type(TypeConverter *converter, ASTNode *ast_type);
 

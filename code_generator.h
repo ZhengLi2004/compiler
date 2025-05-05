@@ -27,12 +27,10 @@ typedef struct CodeGenerator {
 } CodeGenerator;
 
 CodeGenerator* codegen_create(SymbolTable *table);
-void codegen_free(CodeGenerator *gen);
 LLVMModuleRef codegen_generate(CodeGenerator *gen, ASTNode *root);
 void codegen_visit_node(CodeGenerator *gen, ASTNode *node, LLVMValueRef *value);
 
 LoopStack* loop_stack_create();
-void loop_stack_free(LoopStack *stack);
 void append_loop_context(LoopStack *stack, LoopContext *context);
 void pop_loop_context(LoopStack *stack);
 LoopContext* get_current_loop_context(LoopStack *stack);

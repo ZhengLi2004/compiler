@@ -53,7 +53,4 @@ Type* type_function(Type* return_type, Type** param_types, int param_count);
 // 打印类型
 void type_print(Type* type, FILE* out);
 
-// 释放类型
-void type_free(Type* type);
-
 #endif

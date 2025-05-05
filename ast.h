@@ -156,6 +156,5 @@ ASTNode *ast_type_name(const char *name);
 
 /* 打印与析构 */
 void ast_print(ASTNode *node, int indent);
-void ast_free(ASTNode *node);
 
 #endif /* AST_H */

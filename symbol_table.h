@@ -23,6 +23,5 @@ void symbol_table_leave_scope(SymbolTable* table);
 void symbol_table_add(SymbolTable* table, Symbol* symbol);
 Symbol* symbol_table_lookup(SymbolTable* table, const char* name);
 void symbol_table_print(SymbolTable* table, FILE* out);
-void symbol_table_free(SymbolTable* table);
 
 #endif

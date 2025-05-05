@@ -14,10 +14,6 @@ TypeConverter* type_converter_create(LLVMContextRef context) {
     return converter;
 }
 
-void type_converter_free(TypeConverter *converter) {
-    free(converter);
-}
-
 // 主转换函数
 LLVMTypeRef convert_ast_type(TypeConverter *converter, ASTNode *ast_type) {
     if (!ast_type) {

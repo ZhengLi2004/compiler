@@ -102,13 +102,11 @@ static void build_symbol_table_recursive(ASTNode *node, SymbolTable *table) {
 
                     if (!is_valid_type(type)) {
                         error_report("Invalid type for variable '%s'", var_node->varname);
-                        type_free(type);
                         continue;
                     }
 
                     if (is_variable_redeclared(table, var_node->varname)) {
                         error_report("Variable '%s' already declared", var_node->varname);
-                        type_free(type);
                         continue;
                     }
 

@@ -3,3 +3,4 @@
 c99.tab.*
 lex.yy.c
 c99c
+output.ll

@@ -13,12 +13,6 @@ CodeGenerator* codegen_create(SymbolTable *table) {
     return gen;
 }
 
-void codegen_free(CodeGenerator *gen) {
-    LLVMDisposeBuilder(gen->builder);
-    LLVMDisposeModule(gen->module);
-    free(gen);
-}
-
 LLVMModuleRef codegen_generate(CodeGenerator *gen, ASTNode *root) {
     // 处理全局变量和函数定义
     if(root->type == AST_TRANSLATION_UNIT) {
@@ -35,11 +29,6 @@ LoopStack* loop_stack_create() {
     stack->size = 0;
     stack->contexts = malloc(sizeof(LoopContext) * stack->capacity);
     return stack;
-}
-
-void loop_stack_free(LoopStack *stack) {
-    free(stack->contexts);
-    free(stack);
 }
 
 void append_loop_context(LoopStack *stack, LoopContext *context) {
@@ -166,7 +155,6 @@ void codegen_visit_node(CodeGenerator *gen, ASTNode *node, LLVMValueRef *value) 
             
             // 调用函数
             *value = LLVMBuildCall(gen->builder, func, args, node->call.argc, "call");
-            free(args);
             break;
         }
         
@@ -373,7 +361,7 @@ void codegen_visit_node(CodeGenerator *gen, ASTNode *node, LLVMValueRef *value) 
             }
             break;
         
-        case AST_FUNC_DEF: {
+        case AST_FUNC_TYPE: {
             // 获取返回类型
             LLVMTypeRef ret_type = convert_ast_type(gen->type_converter, node->ft.ret_type);
             int param_count = node->ft.params ? node->ft.params->pl.pcount : 0;
@@ -388,7 +376,7 @@ void codegen_visit_node(CodeGenerator *gen, ASTNode *node, LLVMValueRef *value) 
                 }
             }
         
-            // 创建函数类型和函数
+            // 创建函数类型
             LLVMTypeRef func_type = LLVMFunctionType(ret_type, param_types, param_count, 0);
             LLVMValueRef func = LLVMAddFunction(gen->module, node->ft.name, func_type);
         
@@ -396,19 +384,12 @@ void codegen_visit_node(CodeGenerator *gen, ASTNode *node, LLVMValueRef *value) 
             LLVMBasicBlockRef entry = LLVMAppendBasicBlockInContext(gen->context, func, "entry");
             LLVMPositionBuilderAtEnd(gen->builder, entry);
         
-            // 为参数分配内存
+            // 添加参数到符号表
             if (node->ft.params) {
-                for (int i = 0; i < node->ft.params->pl.pcount; i++) {
-                    ASTNode *param = node->ft.params->pl.params[i];
-                    LLVMValueRef param_val = LLVMGetParam(func, i);
-                    LLVMSetValueName(param_val, param->param.declr->varname);
-        
-                    // 分配内存
-                    LLVMValueRef alloc = LLVMBuildAlloca(gen->builder, param_types[i], param->param.declr->varname);
-                    LLVMBuildStore(gen->builder, param_val, alloc);
-        
-                    // 创建符号并添加到符号表
-                    Symbol *sym = symbol_create(param->param.declr->varname, param_types[i], gen->symbol_table->scope_depth, 0, 1, param->param.declr);
+                for (int i = 0; i < param_count; i++) {
+                    LLVMValueRef param = LLVMGetParam(func, i);
+                    ASTNode *param_node = node->ft.params->pl.params[i];
+                    Symbol *sym = symbol_create(param_node->param.declr->varname, param, 1, 0, 1, param_node->param.declr);
                     symbol_table_add(gen->symbol_table, sym);
                 }
             }
@@ -417,69 +398,131 @@ void codegen_visit_node(CodeGenerator *gen, ASTNode *node, LLVMValueRef *value) 
             if (node->ft.body) {
                 codegen_visit_node(gen, node->ft.body, NULL);
             }
-        
-            // 释放参数类型数组
-            if (param_types) {
-                free(param_types);
-            }
-        
             break;
         }
         
         case AST_DECLARATION: {
-            // 判断是否为全局声明
-            int is_global = gen->symbol_table->scope_depth == 0;
+            // 获取类型说明符（如 int, double, void）
+            if (node->declaration.scount <= 0 || node->declaration.specs == NULL) {
+                fprintf(stderr, "Error: Declaration has no specifiers.\n");
+                exit(1);
+            }
         
+            ASTNode *type_node = node->declaration.specs[0];
+            LLVMTypeRef llvm_type = convert_ast_type(gen->type_converter, type_node);
+        
+            if (!llvm_type) {
+                fprintf(stderr, "Error: Failed to convert type.\n");
+                exit(1);
+            }
+        
+            // 遍历所有初始化声明
             for (int i = 0; i < node->declaration.icount; i++) {
-                ASTNode* init_node = node->declaration.inits[i];
-                if (init_node->type == AST_INIT_DECL) {
-                    ASTNode* declr = init_node->id.declr;
-                    ASTNode* init = init_node->id.init;
+                ASTNode *init_node = node->declaration.inits[i];
+                if (init_node->type != AST_INIT_DECL) {
+                    fprintf(stderr, "Error: Expected AST_INIT_DECL in declaration.\n");
+                    continue;
+                }
         
-                    // 解析类型
-                    ASTNode* type_node = node->declaration.specs[0];  // 假设只有一个类型说明符
-                    LLVMTypeRef llvm_type = convert_ast_type(gen->type_converter, type_node);
+                ASTNode *declr = init_node->id.declr;
+                if (!declr) {
+                    fprintf(stderr, "Error: Declaration has no declarator.\n");
+                    exit(1);
+                }
         
-                    LLVMValueRef var;
-                    if (is_global) {
-                        // 全局变量
-                        var = LLVMAddGlobal(gen->module, llvm_type, declr->varname);
-                        LLVMSetLinkage(var, LLVMLinkOnceAnyLinkage);
-                        LLVMSetGlobalConstant(var, 0);
-                        LLVMSetInitializer(var, NULL);
-                        if (init) {
-                            LLVMValueRef init_val;
-                            codegen_visit_node(gen, init, &init_val);
-                            LLVMSetInitializer(var, init_val);
-                        }
+                // 提取变量名（处理指针、数组等复杂声明）
+                ASTNode *var_node = declr;
+                while (var_node->type == AST_POINTER_TYPE || var_node->type == AST_ARRAY_TYPE) {
+                    if (var_node->type == AST_POINTER_TYPE) {
+                        var_node = var_node->ptr_to;
                     } else {
-                        // 局部变量
-                        var = LLVMBuildAlloca(gen->builder, llvm_type, declr->varname);
-        
-                        // 创建符号并添加到符号表
-                        Symbol *sym = symbol_create(
-                            declr->varname,
-                            var,
-                            gen->symbol_table->scope_depth,
-                            0,
-                            0,
-                            declr
-                        );
-                        symbol_table_add(gen->symbol_table, sym);
-        
-                        if (init) {
-                            LLVMValueRef init_val;
-                            codegen_visit_node(gen, init, &init_val);
-                            LLVMBuildStore(gen->builder, init_val, var);
-                        }
+                        var_node = var_node->at.base;
                     }
                 }
+        
+                if (var_node->type != AST_VAR) {
+                    fprintf(stderr, "Error: Declarator is not a variable.\n");
+                    exit(1);
+                }
+        
+                const char *var_name = var_node->varname;
+                if (!var_name) {
+                    fprintf(stderr, "Error: Variable name is NULL.\n");
+                    exit(1);
+                }
+        
+                // 为变量分配内存
+                LLVMValueRef var = LLVMBuildAlloca(gen->builder, llvm_type, var_name);
+        
+                // 将变量加入符号表
+                Symbol *sym = symbol_create(var_name, var, gen->symbol_table->scope_depth, 0, 0, declr);
+                if (!sym) {
+                    fprintf(stderr, "Error: Failed to create symbol for %s\n", var_name);
+                    exit(1);
+                }
+                symbol_table_add(gen->symbol_table, sym);
+        
+                // 设置返回值（如需）
+                if (value) *value = var;
+                break;
             }
             break;
         }
         
         case AST_INIT_DECL: {
-            // 类似AST_DECLARATION的处理
+            ASTNode *declr = node->id.declr;
+            if (!declr) {
+                fprintf(stderr, "Error: AST_INIT_DECL has no declarator.\n");
+                exit(1);
+            }
+        
+            // 提取变量名
+            ASTNode *var_node = declr;
+            while (var_node->type == AST_POINTER_TYPE || var_node->type == AST_ARRAY_TYPE) {
+                if (var_node->type == AST_POINTER_TYPE) {
+                    var_node = var_node->ptr_to;
+                } else {
+                    var_node = var_node->at.base;
+                }
+            }
+        
+            if (var_node->type != AST_VAR) {
+                fprintf(stderr, "Error: Declarator is not a variable.\n");
+                exit(1);
+            }
+        
+            const char *var_name = var_node->varname;
+            if (!var_name) {
+                fprintf(stderr, "Error: Variable name is NULL.\n");
+                exit(1);
+            }
+        
+            // 获取类型
+            LLVMTypeRef var_type = convert_ast_type(gen->type_converter, declr);
+            if (!var_type) {
+                fprintf(stderr, "Error: Failed to convert variable type.\n");
+                exit(1);
+            }
+        
+            // 分配内存
+            LLVMValueRef var = LLVMBuildAlloca(gen->builder, var_type, var_name);
+        
+            // 加入符号表
+            Symbol *sym = symbol_create(var_name, var, gen->symbol_table->scope_depth, 0, 0, declr);
+            if (!sym) {
+                fprintf(stderr, "Error: Failed to create symbol.\n");
+                exit(1);
+            }
+            symbol_table_add(gen->symbol_table, sym);
+        
+            // 如果有初始化表达式
+            if (node->id.init) {
+                LLVMValueRef init_val;
+                codegen_visit_node(gen, node->id.init, &init_val);
+                LLVMBuildStore(gen->builder, init_val, var);
+            }
+        
+            if (value) *value = var;
             break;
         }
         
@@ -506,7 +549,6 @@ void codegen_visit_node(CodeGenerator *gen, ASTNode *node, LLVMValueRef *value) 
                 param_types[i] = convert_ast_type(gen->type_converter, param->param.declr);
             }
             *value = LLVMFunctionType(LLVMVoidTypeInContext(gen->context), param_types, param_count, 0);
-            free(param_types);
             break;
         }
         
@@ -528,7 +570,6 @@ void codegen_visit_node(CodeGenerator *gen, ASTNode *node, LLVMValueRef *value) 
             LLVMTypeRef elem_type = LLVMTypeOf(elements[0]);
             LLVMTypeRef array_type = LLVMArrayType(elem_type, count);
             *value = LLVMConstArray(elem_type, elements, count);
-            free(elements);
             break;
         }
         

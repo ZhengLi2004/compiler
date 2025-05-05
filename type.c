@@ -91,26 +91,3 @@ void type_print(Type* type, FILE* out) {
             break;
     }
 }
-
-void type_free(Type* type) {
-    if (!type) return;
-    switch (type->kind) {
-        case TYPE_BASIC:
-            free(type->basic);
-            break;
-        case TYPE_POINTER:
-            type_free(type->pointer.base);
-            break;
-        case TYPE_ARRAY:
-            type_free(type->array.base);
-            break;
-        case TYPE_FUNCTION:
-            for (int i = 0; i < type->function.param_count; ++i) {
-                type_free(type->function.param_types[i]);
-            }
-            free(type->function.param_types);
-            type_free(type->function.return_type);
-            break;
-    }
-    free(type);
-}

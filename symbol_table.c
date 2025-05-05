@@ -43,14 +43,6 @@ void symbol_table_enter_scope(SymbolTable* table) {
 
 void symbol_table_leave_scope(SymbolTable* table) {
     if (table->scope_depth > 0) {
-        Scope* scope = table->scopes[table->scope_depth];
-        for (int i = 0; i < scope->symbol_count; ++i) {
-            free(scope->symbols[i]->name);
-            type_free(scope->symbols[i]->type);
-            free(scope->symbols[i]);
-        }
-        free(scope->symbols);
-        free(scope);
         table->scope_depth--;
         table->scope_count--;
     }
@@ -85,9 +77,4 @@ void symbol_table_print(SymbolTable* table, FILE* out) {
             fprintf(out, "\n");
         }
     }
-}
-
-void symbol_table_free(SymbolTable* table) {
-    free(table->scopes);
-    free(table);
 }
