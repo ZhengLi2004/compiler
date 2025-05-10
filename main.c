@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
     
     // 生成IR
     LLVMModuleRef module = codegen_generate(gen, ast_root);
-    
+
     // 输出IR到文件
     char *ir = LLVMPrintModuleToString(module);
     FILE *out = fopen("output.ll", "w");

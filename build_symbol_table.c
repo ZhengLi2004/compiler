@@ -7,7 +7,7 @@
 #include "type.h"
 
 // 调试级别控制
-int debug_level = 2;  // 可调整为 0-3，3 输出最详细信息
+int debug_level = 0;  // 可调整为 0-3，3 输出最详细信息
 
 #define DEBUG(level, fmt, ...) \
     if (debug_level >= level) fprintf(stderr, "[DEBUG] " fmt "\n", ##__VA_ARGS__)

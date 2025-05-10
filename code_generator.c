@@ -54,6 +54,9 @@ LoopContext* get_current_loop_context(LoopStack *stack) {
 
 void codegen_visit_node(CodeGenerator *gen, ASTNode *node, LLVMValueRef *value) {
     if (!node) return;
+
+    ast_print(node,2);
+    printf("\n\n");
     
     switch (node->type) {
         case AST_INT:
@@ -70,6 +73,7 @@ void codegen_visit_node(CodeGenerator *gen, ASTNode *node, LLVMValueRef *value) 
                 fprintf(stderr, "Undefined variable: %s\n", node->varname);
                 exit(1);
             }
+            if(sym->llvm_value==NULL)printf("1111");
             *value = LLVMBuildLoad(gen->builder, sym->llvm_value, node->varname);
             break;
         }
@@ -372,7 +376,7 @@ void codegen_visit_node(CodeGenerator *gen, ASTNode *node, LLVMValueRef *value) 
                 param_types = malloc(sizeof(LLVMTypeRef) * param_count);
                 for (int i = 0; i < param_count; i++) {
                     ASTNode *param = node->ft.params->pl.params[i];
-                    param_types[i] = convert_ast_type(gen->type_converter, param->param.declr);
+                    param_types[i] = convert_ast_type(gen->type_converter, param->param.dspecs[0]);
                 }
             }
         
@@ -389,7 +393,21 @@ void codegen_visit_node(CodeGenerator *gen, ASTNode *node, LLVMValueRef *value) 
                 for (int i = 0; i < param_count; i++) {
                     LLVMValueRef param = LLVMGetParam(func, i);
                     ASTNode *param_node = node->ft.params->pl.params[i];
-                    Symbol *sym = symbol_create(param_node->param.declr->varname, param, 1, 0, 1, param_node->param.declr);
+
+                    // 提取参数名
+                    ASTNode *var_node = param_node->param.declr;
+                    while (var_node->type == AST_POINTER_TYPE || var_node->type == AST_ARRAY_TYPE) {
+                        if (var_node->type == AST_POINTER_TYPE) {
+                            var_node = var_node->ptr_to;
+                        } else {
+                            var_node = var_node->at.base;
+                        }
+                    }
+                    const char *param_name = var_node->varname;
+                    LLVMValueRef param_alloca = LLVMBuildAlloca(gen->builder, LLVMTypeOf(param), param_name);
+                    LLVMBuildStore(gen->builder, param, param_alloca);
+
+                    Symbol *sym = symbol_create(param_name, 0, 1, 0, 1, param_node->param.declr, param_alloca);
                     symbol_table_add(gen->symbol_table, sym);
                 }
             }
@@ -397,6 +415,15 @@ void codegen_visit_node(CodeGenerator *gen, ASTNode *node, LLVMValueRef *value) 
             // 处理函数体
             if (node->ft.body) {
                 codegen_visit_node(gen, node->ft.body, NULL);
+            }
+
+            // 确保函数有返回语句
+            if (!LLVMGetBasicBlockTerminator(entry)) {
+                if (LLVMGetTypeKind(ret_type) == LLVMVoidTypeKind) {
+                    LLVMBuildRetVoid(gen->builder);
+                } else {
+                    LLVMBuildRet(gen->builder, LLVMConstNull(ret_type));
+                }
             }
             break;
         }
@@ -455,12 +482,19 @@ void codegen_visit_node(CodeGenerator *gen, ASTNode *node, LLVMValueRef *value) 
                 LLVMValueRef var = LLVMBuildAlloca(gen->builder, llvm_type, var_name);
         
                 // 将变量加入符号表
-                Symbol *sym = symbol_create(var_name, var, gen->symbol_table->scope_depth, 0, 0, declr);
+                Symbol *sym = symbol_create(var_name, 0, gen->symbol_table->scope_depth, 0, 0, declr, var);
                 if (!sym) {
                     fprintf(stderr, "Error: Failed to create symbol for %s\n", var_name);
                     exit(1);
                 }
                 symbol_table_add(gen->symbol_table, sym);
+
+                // 如果有初始化表达式，递归处理
+                if (init_node->id.init) {
+                    LLVMValueRef init_val;
+                    codegen_visit_node(gen, init_node->id.init, &init_val);
+                    LLVMBuildStore(gen->builder, init_val, var);
+                }
         
                 // 设置返回值（如需）
                 if (value) *value = var;
@@ -508,7 +542,7 @@ void codegen_visit_node(CodeGenerator *gen, ASTNode *node, LLVMValueRef *value) 
             LLVMValueRef var = LLVMBuildAlloca(gen->builder, var_type, var_name);
         
             // 加入符号表
-            Symbol *sym = symbol_create(var_name, var, gen->symbol_table->scope_depth, 0, 0, declr);
+            Symbol *sym = symbol_create(var_name, 0, gen->symbol_table->scope_depth, 0, 0, declr, var);
             if (!sym) {
                 fprintf(stderr, "Error: Failed to create symbol.\n");
                 exit(1);
@@ -517,6 +551,7 @@ void codegen_visit_node(CodeGenerator *gen, ASTNode *node, LLVMValueRef *value) 
         
             // 如果有初始化表达式
             if (node->id.init) {
+                printf("Attempt\n");
                 LLVMValueRef init_val;
                 codegen_visit_node(gen, node->id.init, &init_val);
                 LLVMBuildStore(gen->builder, init_val, var);

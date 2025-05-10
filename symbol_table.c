@@ -3,7 +3,7 @@
 #include <string.h>
 #include "symbol_table.h"
 
-Symbol* symbol_create(const char *name, LLVMTypeRef type, int scope_depth, int is_constant, int is_parameter, ASTNode *ast_node) {
+Symbol* symbol_create(const char *name, Type *type, int scope_depth, int is_constant, int is_parameter, ASTNode *ast_node, LLVMValueRef llvm_value) {
     Symbol *sym = (Symbol *)malloc(sizeof(Symbol));
     if (!sym) {
         fprintf(stderr, "Memory allocation failed for Symbol\n");
@@ -16,6 +16,7 @@ Symbol* symbol_create(const char *name, LLVMTypeRef type, int scope_depth, int i
     sym->is_constant = is_constant;
     sym->is_parameter = is_parameter;
     sym->ast_node = ast_node;
+    sym->llvm_value = llvm_value;
 
     return sym;
 }

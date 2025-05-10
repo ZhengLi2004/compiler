@@ -20,6 +20,8 @@ LLVMTypeRef convert_ast_type(TypeConverter *converter, ASTNode *ast_type) {
         return LLVMVoidTypeInContext(converter->context);
     }
 
+    printf("%d\n",ast_type->type);
+
     switch (ast_type->type) {
         case AST_TYPE_NAME:
             if (strcmp(ast_type->varname, "int") == 0)

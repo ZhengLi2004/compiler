@@ -15,7 +15,7 @@ typedef struct Scope {
     int symbol_count;
 } Scope;
 
-Symbol* symbol_create(const char *name, LLVMTypeRef type, int scope_depth, int is_constant, int is_parameter, ASTNode *ast_node);
+Symbol* symbol_create(const char *name, Type *type, int scope_depth, int is_constant, int is_parameter, ASTNode *ast_node, LLVMValueRef llvm_value);
 
 SymbolTable* symbol_table_create();
 void symbol_table_enter_scope(SymbolTable* table);
