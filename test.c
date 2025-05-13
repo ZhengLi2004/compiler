@@ -1,6 +1,8 @@
-void mergeSort(int l,int r){
-    if(l==r)return;
-    int mid=(l+r)/2;
-    mergeSort(l,mid);
-    mergeSort(mid+1,r);
+void merge(int a,int b){
+
+}
+int main(){
+    int a;
+    a=1;
+    return;
 }

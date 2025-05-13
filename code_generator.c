@@ -55,8 +55,8 @@ LoopContext* get_current_loop_context(LoopStack *stack) {
 void codegen_visit_node(CodeGenerator *gen, ASTNode *node, LLVMValueRef *value) {
     if (!node) return;
 
-    ast_print(node,2);
-    printf("\n\n");
+    // ast_print(node,2);
+    // printf("\n\n");
     
     switch (node->type) {
         case AST_INT:
@@ -150,15 +150,28 @@ void codegen_visit_node(CodeGenerator *gen, ASTNode *node, LLVMValueRef *value) 
                 fprintf(stderr, "Undefined function: %s\n", node->call.fname);
                 exit(1);
             }
-            
+
+            // 获取函数类型和参数数量
+            LLVMTypeRef func_ptr_type = LLVMTypeOf(func); // 函数指针类型（如 i32 (i32, i32)*）
+            LLVMTypeRef func_type = LLVMGetElementType(func_ptr_type); // 实际函数类型（如 i32 (i32, i32)）
+            unsigned param_count = LLVMCountParamTypes(func_type);
+
+            // 检查参数数量匹配
+            if (param_count != node->call.argc) {
+                fprintf(stderr, "Function %s expects %d args, got %d\n",
+                        node->call.fname, param_count, node->call.argc);
+                exit(1);
+            }
+
             // 生成参数
             LLVMValueRef* args = malloc(sizeof(LLVMValueRef) * node->call.argc);
             for (int i = 0; i < node->call.argc; i++) {
                 codegen_visit_node(gen, node->call.args[i], &args[i]);
             }
-            
+
             // 调用函数
             *value = LLVMBuildCall(gen->builder, func, args, node->call.argc, "call");
+            free(args);
             break;
         }
         
@@ -172,7 +185,8 @@ void codegen_visit_node(CodeGenerator *gen, ASTNode *node, LLVMValueRef *value) 
             
         case AST_EXPR_STMT:
             if (node->expr) {
-                codegen_visit_node(gen, node->expr, NULL);
+                LLVMValueRef temp_value;
+                codegen_visit_node(gen, node->expr, &temp_value);
             }
             break;
             
@@ -369,25 +383,18 @@ void codegen_visit_node(CodeGenerator *gen, ASTNode *node, LLVMValueRef *value) 
             // 获取返回类型
             LLVMTypeRef ret_type = convert_ast_type(gen->type_converter, node->ft.ret_type);
             int param_count = node->ft.params ? node->ft.params->pl.pcount : 0;
-        
-            // 转换参数类型
-            LLVMTypeRef *param_types = NULL;
-            if (param_count > 0) {
-                param_types = malloc(sizeof(LLVMTypeRef) * param_count);
-                for (int i = 0; i < param_count; i++) {
-                    ASTNode *param = node->ft.params->pl.params[i];
-                    param_types[i] = convert_ast_type(gen->type_converter, param->param.dspecs[0]);
-                }
-            }
-        
-            // 创建函数类型
-            LLVMTypeRef func_type = LLVMFunctionType(ret_type, param_types, param_count, 0);
+            LLVMTypeRef func_type = convert_ast_type(gen->type_converter, node);
+            char *func_type_str = LLVMPrintTypeToString(func_type);
+            printf("Function type: %s\n", func_type_str);
             LLVMValueRef func = LLVMAddFunction(gen->module, node->ft.name, func_type);
-        
+            
             // 创建函数入口块
             LLVMBasicBlockRef entry = LLVMAppendBasicBlockInContext(gen->context, func, "entry");
             LLVMPositionBuilderAtEnd(gen->builder, entry);
         
+            // 进入函数作用域
+            symbol_table_enter_scope(gen->symbol_table);
+
             // 添加参数到符号表
             if (node->ft.params) {
                 for (int i = 0; i < param_count; i++) {
@@ -425,6 +432,10 @@ void codegen_visit_node(CodeGenerator *gen, ASTNode *node, LLVMValueRef *value) 
                     LLVMBuildRet(gen->builder, LLVMConstNull(ret_type));
                 }
             }
+
+            // 离开函数作用域
+            symbol_table_leave_scope(gen->symbol_table);
+
             break;
         }
         

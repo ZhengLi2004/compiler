@@ -63,7 +63,7 @@ LLVMTypeRef convert_ast_type(TypeConverter *converter, ASTNode *ast_type) {
             if (param_count > 0) {
                 param_types = malloc(sizeof(LLVMTypeRef) * param_count);
                 for (int i = 0; i < param_count; i++) {
-                    param_types[i] = convert_ast_type(converter, ast_type->ft.params->pl.params[i]);
+                    param_types[i] = convert_ast_type(converter, ast_type->ft.params->pl.params[i]->param.dspecs[0]);
                 }
             }
 
